@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vitrify-site"
+version = "0.1.0"
+description = "Documentation site and development commands for Vitrify."
+readme = "docs/index.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jeeves-shell[all]",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.7.0",
+    "mkdocs-macros-plugin>=1.5.0",
+    "mkdocs-table-reader-plugin>=3.1.0,<4.0.0",
+    "pymdown-extensions>=10.0",
+    "roc-validator",
+    "sh>=2.0",
+]
+
+[tool.setuptools]
+packages = []
