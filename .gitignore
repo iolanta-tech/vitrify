@@ -1,0 +1,17 @@
+# Rust
+/target
+
+# MkDocs
+/site
+
+# Local docs tooling (installed on demand)
+/.docs-tools
+/.venv
+/.envrc
+
+# Python
+__pycache__/
+*.egg-info/
+
+# Playwright MCP artifacts
+/.playwright-mcp
