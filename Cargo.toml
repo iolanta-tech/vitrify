@@ -1,0 +1,31 @@
+[package]
+name = "vitrify"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "Apache-2.0 OR MIT"
+description = "Turn a SPARQL retrieval into a durable local file"
+readme = "README.md"
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+clap = { version = "4", features = ["derive"] }
+phf = { version = "0.11", features = ["macros"] }
+serde_json = "1"
+sha2 = "0.10"
+oxhttp = { version = "0.3", default-features = false, features = [
+    "client",
+    "flate2",
+    "rustls-ring-native",
+] }
+
+[dev-dependencies]
+assert_cmd = "2"
+serde_json = "1"
+sha2 = "0.10"
+oxhttp = { version = "0.3", default-features = false, features = [
+    "client",
+    "server",
+    "flate2",
+    "rustls-ring-native",
+] }
