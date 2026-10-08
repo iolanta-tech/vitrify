@@ -8,6 +8,7 @@ extra_javascript:
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     scheme: default
     primary: teal
@@ -54,7 +55,8 @@ nav:
       - Female Nobel laureates: examples/female-persons.md
       - Time-bounded subclasses: examples/time-bounded-subclasses.md
       - SELECT response returned as JSON: examples/select-turtle.md
-  - Command reference: command.md
-  - Output and provenance: output.md
-  - Local workflows: workflows.md
-  - Roadmap: roadmap.md
+  - cli.md
+  - Outputs:
+      - outputs/index.md
+      - RO-Crate: outputs/ro-crate/index.md
+  - roadmap.md
