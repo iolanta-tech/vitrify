@@ -1,4 +1,4 @@
-# Local workflows
+# :material-source-branch: Local workflows
 
 Treat a Vitrify result as a local input. Keep retrieval as an explicit step and
 let analysis targets depend on the saved result file.
