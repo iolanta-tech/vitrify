@@ -25,7 +25,7 @@ def examples() -> None:
         rich.print(f"[b]{name}[/b]: running retrieval script…")
         sh.Command("sh")(
             str(directory / script_path),
-            _cwd=str(directory),
+            _cwd=str(directory if script_path.startswith("input/") else EXAMPLES_DIR),
             _err=sys.stderr,
         )
         rich.print(f"[b]{name}[/b]: validating {PROFILE}…")
