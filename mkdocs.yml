@@ -3,9 +3,15 @@ site_description: Turn a SPARQL retrieval into a durable local file.
 repo_url: https://github.com/iolanta-tech/vitrify
 extra_css:
   - stylesheets/extra.css
+extra_javascript:
+  - javascripts/file-tabs.js
 
 theme:
   name: material
+  palette:
+    scheme: default
+    primary: teal
+    accent: cyan
   features:
     - navigation.tabs
     - navigation.indexes
@@ -13,6 +19,7 @@ theme:
 
 markdown_extensions:
   - admonition
+  - attr_list
   - md_in_html
   - pymdownx.details
   - pymdownx.superfences
@@ -22,6 +29,7 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.tabbed:
       alternate_style: true
+      slugify: !!python/name:markdown.extensions.toc.slugify_unicode
   - pymdownx.snippets:
       base_path:
         - .
@@ -41,7 +49,8 @@ nav:
   - Home: index.md
   - Examples:
       - examples/index.md
-      - Query from stdin: examples/stdin.md
+      - EU capitals: examples/eu-capitals.md
+      - Query from a file: examples/query-from-file.md
       - Female Nobel laureates: examples/female-persons.md
       - Time-bounded subclasses: examples/time-bounded-subclasses.md
       - SELECT response returned as JSON: examples/select-turtle.md
