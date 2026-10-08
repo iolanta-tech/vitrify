@@ -4,11 +4,7 @@ Vitrify currently provides the `sparql` command. It sends one query to a SPARQL
 endpoint and saves the response body in an output directory.
 
 ```sh
-vitrify sparql \
-  --endpoint https://query.wikidata.org/sparql \
-  --query docs/examples/female-persons/query.rq \
-  --format csv \
-  --to female-persons
+--8<-- "docs/examples/basic-example/input/retrieve.sh"
 ```
 
 ## :material-format-list-bulleted: Arguments
@@ -50,13 +46,9 @@ result crate.
 
 ## :material-swap-horizontal: Requested and returned formats can differ
 
-SPARQL `SELECT` results are tables, while Turtle represents an RDF graph. From
-`docs/examples/select-turtle/`, run the retrieval script for an example that
-requests Turtle for a `SELECT` query:
-
-```sh
---8<-- "docs/examples/select-turtle/retrieve.sh"
-```
+SPARQL `SELECT` results are tables, while Turtle represents an RDF graph. The
+[SELECT response example](examples/select-turtle.md) includes a complete
+command that requests Turtle for a `SELECT` query.
 
 QLever returned SPARQL Results JSON with HTTP 200. Vitrify saved the body as
 `results.ttl` because Turtle was requested, and recorded the actual media type
