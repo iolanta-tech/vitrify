@@ -54,3 +54,14 @@
     display: none;
   }
 }
+
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned) {
+  background-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .vitrify-outputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
