@@ -117,9 +117,7 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
         ],
     });
 
-    let mut text = serde_json::to_string_pretty(&document).expect("the document is serializable");
-    text.push('\n');
-    text
+    serde_json::to_string_pretty(&document).expect("the document is serializable") + "\n"
 }
 
 #[cfg(test)]
