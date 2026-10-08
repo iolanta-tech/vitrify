@@ -5,17 +5,18 @@
 
 Vitrify saves a SPARQL retrieval as an ordinary local file with attached RO-Crate evidence.
 
-From the repository root, install Vitrify and retrieve a Wikidata result:
+Install Vitrify and retrieve a Wikidata result:
 
 ```sh
 cargo install vitrify
-vitrify sparql \
+echo 'SELECT ?label WHERE { ?country wdt:P463 wd:Q458; wdt:P36 ?capital . ?capital rdfs:label ?label . FILTER(LANG(?label) = "en") } ORDER BY ?label LIMIT 5' |
+  vitrify sparql \
   --endpoint https://query.wikidata.org/sparql \
-  --query docs/examples/female-persons/query.rq \
+  --query - \
   --format csv \
-  --to female-persons
+  --to eu-capitals
 ```
 
-This writes `female-persons/results.csv` with `query.rq` and
+This writes `eu-capitals/results.csv` with `query.rq` and
 `ro-crate-metadata.json`. See the [documentation](https://vitrify.iolanta.tech/)
 for the command reference, output details, workflows, and roadmap.
