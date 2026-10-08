@@ -11,6 +11,7 @@ from textwrap import indent
 ROOT_DIR = Path(__file__).parent.resolve()
 EXAMPLES_DIR = ROOT_DIR / "docs" / "examples"
 PREVIEW_ROWS = 5
+RO_CRATE_URL = "https://www.researchobject.org/ro-crate/"
 
 
 def directory_preview(example, link_prefix="examples/"):
@@ -34,10 +35,13 @@ def directory_preview(example, link_prefix="examples/"):
         part.strip("/") for part in (link_prefix, example) if part.strip("/")
     )
     link_root = f"/{link_root}"
-    crate_link_root = (
-        f"{link_root}/output" if crate_dir != example_dir else link_root
-    )
-    crate_name = "output" if crate_dir != example_dir else example
+    crate_relative_path = crate_dir.relative_to(example_dir)
+    if crate_relative_path == Path("."):
+        crate_link_root = link_root
+        crate_name = example
+    else:
+        crate_link_root = f"{link_root}/{crate_relative_path.as_posix()}"
+        crate_name = crate_relative_path.name
     lines = [f":material-folder-open: `{crate_name}/`  "]
     entries = (
         ("material-file-document-outline", "query.rq"),
@@ -101,6 +105,9 @@ def source(path, repo_url, title="Source", collapsed=False):
     if not source_path.is_file():
         raise ValueError(f"Documentation source does not exist: {path}")
 
+    if title.startswith("RO-Crate"):
+        title = f"[RO-Crate]({RO_CRATE_URL}){title.removeprefix('RO-Crate')}"
+
     repository_path = Path(path).as_posix()
     github_url = f"{repo_url.rstrip('/')}/blob/main/{repository_path}"
     syntax = {".json": "json", ".rq": "sparql", ".sh": "bash"}.get(
@@ -153,11 +160,18 @@ def _result_entity(example_dir):
 
 
 def _crate_directory(example_dir):
-    """Find the output directory when inputs and generated files are separated."""
-    output_dir = example_dir / "output"
-    if (output_dir / "ro-crate-metadata.json").is_file():
-        return output_dir
-    return example_dir
+    """Find the example's RO-Crate, whether nested or at its root."""
+    if (example_dir / "ro-crate-metadata.json").is_file():
+        return example_dir
+
+    crate_directories = [
+        path
+        for path in example_dir.iterdir()
+        if path.is_dir() and (path / "ro-crate-metadata.json").is_file()
+    ]
+    if len(crate_directories) == 1:
+        return crate_directories[0]
+    raise ValueError(f"Expected exactly one RO-Crate in {example_dir}")
 
 
 def _sparql_json(content):
