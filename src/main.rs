@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "vitrify",
     version,
-    about = "Turn a SPARQL retrieval into a durable local file"
+    about = "Record results of a SPARQL query with metadata & provenance"
 )]
 struct Cli {
     #[command(subcommand)]
