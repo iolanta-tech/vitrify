@@ -6,6 +6,16 @@
   gap: 1rem;
 }
 
+.md-typeset p:has(> .md-button.github-file-link) {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.md-typeset .md-button.github-file-link {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 .md-typeset .admonition.example > .admonition-title .example-source-link,
 .md-typeset details.example > summary .example-source-link {
   margin-left: auto;
