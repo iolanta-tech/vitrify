@@ -6,6 +6,9 @@ rust-version = "1.88"
 license = "Apache-2.0 OR MIT"
 description = "Turn a SPARQL retrieval into a durable local file"
 readme = "README.md"
+homepage = "https://vitrify.iolanta.tech"
+documentation = "https://vitrify.iolanta.tech"
+repository = "https://github.com/iolanta-tech/vitrify"
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
