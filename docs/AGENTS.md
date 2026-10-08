@@ -43,10 +43,10 @@ unless the reader explicitly wants a new retrieval.
 
 ## Example relationship
 
-The home page gives a quick preview of the EU-capitals retrieval.
-`examples/stdin.md` intentionally expands the same example with its query,
-result table, crate metadata, and rerun command. Keep this as a preview followed
-by a full walkthrough.
+The home page and `examples/eu-capitals.md` intentionally show the same complete
+EU-capitals example: command, directory, query, result table, and crate
+metadata. This is an allowed exception to the concision and duplication rules.
+Keep both pages self-contained and reuse the shared script and macros.
 
 ## Home-page identity
 
