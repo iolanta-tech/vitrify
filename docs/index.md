@@ -46,22 +46,9 @@ hide: [navigation, toc]
 
 ## :material-magnify: Inspect the capture
 
-=== "Results CSV"
+{{ file_tabs('basic-example') }}
 
-{{ read_csv('docs/examples/basic-example/eu-capitals/results.csv') | add_indentation(spaces=4) }}
-
-=== "RO-Crate metadata"
-
-    ```json
-    [
-      // Result file
-    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:37:42"
-      // … retrieval record follows; other crate entities are omitted
-    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:62:85"
-    ]
-    ```
-
-[Full stdin example](examples/stdin.md).
+[Full EU-capitals example](examples/eu-capitals.md){ .md-button }
 
 ## What is vitrification?
 
