@@ -1,5 +1,6 @@
 ---
 hide: [navigation, toc]
+icon: material/home
 ---
 
 # Vitrify
