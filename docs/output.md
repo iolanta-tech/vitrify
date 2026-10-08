@@ -32,3 +32,18 @@ for retrieved data. Check the source endpoint's terms before reusing that data.
 Open the complete example metadata file:
 
 [RO-Crate metadata for the Wikidata example](examples/female-persons/ro-crate-metadata.json)
+
+## :material-folder-refresh: Reusing an output directory
+
+A successful retrieval into an existing directory overwrites `query.rq`, the
+result file with the selected extension, and `ro-crate-metadata.json`. Result
+files with other extensions remain: rerunning with `--format json` after
+`--format csv` leaves both `results.json` and `results.csv`, while the new
+metadata describes only `results.json`. Use a new directory or preserve the
+existing capture in version control before retrieving again.
+
+Vitrify writes the query first, streams the result, then writes the metadata.
+A failure during streaming can leave the new query and a partial result beside
+metadata from an earlier retrieval. A failure while writing metadata can leave
+it incomplete. After an error, verify or replace the affected capture before
+using it as a local input.
