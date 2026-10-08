@@ -1,4 +1,4 @@
-# Command reference
+# :material-console: Command reference
 
 Vitrify currently provides the `sparql` command. It sends one query to a SPARQL
 endpoint and saves the response body in an output directory.
@@ -11,20 +11,20 @@ vitrify sparql \
   --to female-persons
 ```
 
-## Arguments
+## :material-format-list-bulleted: Arguments
 
 | Argument | Required | Description |
 | --- | --- | --- |
 | `--endpoint IRI` | Yes | SPARQL endpoint URL. |
 | `--query PATH` or `--query -` | Yes | Read the query from a UTF-8 file, or read standard input when the value is `-`. |
-| `--to DIRECTORY` | Yes | Directory for the result and its RO-Crate files. |
+| `--to DIRECTORY` | Yes | Directory for the result and its [RO-Crate](https://www.researchobject.org/ro-crate/) files. |
 | `--format FORMAT` | No | Request a response format and use its corresponding filename extension. |
 
 The query must not be empty. Standard input is read only when `--query -` is
 specified. Vitrify saves the query text it sends as `query.rq` in the output
 directory.
 
-## Formats
+## :material-file-document-multiple: Formats
 
 | `--format` | Requested media type | Result extension |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ not guarantee the endpoint returns that media type; use the recorded
 A non-success HTTP response is an error and does not produce a successful
 result crate.
 
-## Requested and returned formats can differ
+## :material-swap-horizontal: Requested and returned formats can differ
 
 SPARQL `SELECT` results are tables, while Turtle represents an RDF graph. From
 `docs/examples/select-turtle/`, run the retrieval script for an example that
