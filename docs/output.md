@@ -1,4 +1,4 @@
-# Output and provenance
+# :material-folder-open: Output and provenance
 
 `vitrify sparql --to DIRECTORY` writes the result and two evidence files into
 the directory:
@@ -18,7 +18,8 @@ unrecognized response media type produces `results.dat`.
 `query.rq` contains the exact query text sent to the endpoint. It is included
 even when the query was read from standard input.
 
-`ro-crate-metadata.json` is an RO-Crate 1.2 JSON-LD document describing the
+`ro-crate-metadata.json` is an [RO-Crate](https://www.researchobject.org/ro-crate/)
+1.2 JSON-LD document describing the
 retrieval. It links the result and query files and records their byte sizes and
 SHA-256 checksums, the result media type when provided, the endpoint, response
 status, final URL, requested `Accept` value when one was sent, and retrieval
