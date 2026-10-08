@@ -6,7 +6,7 @@ This project is managed with [Jeeves](https://jeeves.sh). Run `j <task>` and
 consult `jeeves.py` before adding, changing, or invoking project tasks.
 
 For CLI commands, arguments, and output behavior, start with
-`docs/command.md` and `docs/output.md`.
+`docs/cli.md` and `docs/outputs/ro-crate/index.md`.
 
 ## Setup and verification
 
