@@ -14,7 +14,7 @@ EXAMPLES = (
     ("female-persons", "retrieve.sh", "."),
     ("select-turtle", "retrieve.sh", "."),
     ("time-bounded-subclasses", "retrieve.sh", "."),
-    ("basic-example", "input/retrieve.sh", "output"),
+    ("basic-example", "input/retrieve.sh", "eu-capitals"),
 )
 
 
