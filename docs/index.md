@@ -2,23 +2,17 @@
 hide: [navigation, toc]
 ---
 
-<h1><img src="images/logo.png" alt="Vitrify" width="360"></h1>
+# Vitrify
 
-Vitrify saves SPARQL results with the query and retrieval evidence.
+<img src="images/logo.png" alt="Vitrify">
 
-## Install
-
-Install from crates.io:
-
-```sh
-cargo install vitrify
-```
-
-## One retrieval, three local artifacts
+`vitrify` turns a mutable SPARQL response into a durable, inspectable local file with its query and retrieval evidence.
 
 <div class="grid cards vitrify-workflow" markdown>
 
 -   :material-database: **SPARQL endpoint**
+
+    ---
 
     Send the exact query to Wikidata's mutable endpoint.
 
@@ -28,6 +22,11 @@ cargo install vitrify
 
 -   :material-console: **Vitrify command**
 
+    ---
+
+    Capture five EU-capital labels in a local
+    [RO-Crate](https://www.researchobject.org/ro-crate/).
+
     ```sh
     --8<-- "docs/examples/basic-example/input/retrieve.sh"
     ```
@@ -36,30 +35,40 @@ cargo install vitrify
 
 -   :material-folder-open: **RO-Crate directory**
 
+    ---
+
     The ordinary response file is kept with the exact query and RO-Crate
     evidence.
 
-    :material-file-document-outline: [`query.rq`](examples/basic-example/output/query.rq)  
-    :material-table: [`results.csv`](examples/basic-example/output/results.csv)  
-    :material-code-json: [`ro-crate-metadata.json`](examples/basic-example/output/ro-crate-metadata.json)
+    {{ directory_preview('basic-example') | add_indentation(spaces=4) }}
 
 </div>
 
-[Full stdin example](examples/stdin.md).
-
-## Inspect the capture
+## :material-magnify: Inspect the capture
 
 === "Results CSV"
 
-{{ read_csv('docs/examples/basic-example/output/results.csv') | add_indentation(spaces=4) }}
+{{ read_csv('docs/examples/basic-example/eu-capitals/results.csv') | add_indentation(spaces=4) }}
 
 === "RO-Crate metadata"
 
     ```json
     [
       // Result file
-    --8<-- "docs/examples/basic-example/output/ro-crate-metadata.json:37:42"
+    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:37:42"
       // … retrieval record follows; other crate entities are omitted
-    --8<-- "docs/examples/basic-example/output/ro-crate-metadata.json:62:85"
+    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:62:85"
     ]
     ```
+
+[Full stdin example](examples/stdin.md).
+
+## What is vitrification?
+
+*To vitrify* is to turn something into glass. See also: [**Stanislaw Lem** *Fiasco*](https://english.lem.pl/works/novels/fiasco).
+
+## :material-download: Install
+
+```sh
+cargo install vitrify
+```
