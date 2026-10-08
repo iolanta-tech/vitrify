@@ -1,1 +1,0 @@
-SELECT ?label WHERE { wd:Q42 rdfs:label ?label . FILTER(LANG(?label) = "en") }
