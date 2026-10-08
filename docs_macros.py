@@ -1,11 +1,12 @@
 """Macros for rendering Vitrify's saved examples in MkDocs."""
 
-import csv
 import html
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from textwrap import indent
+
+from markdown.extensions.toc import slugify_unicode
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
@@ -14,87 +15,68 @@ PREVIEW_ROWS = 5
 RO_CRATE_URL = "https://www.researchobject.org/ro-crate/"
 
 
-def directory_preview(example, link_prefix="examples/"):
+def directory_preview(example):
     """Render only the generated crate contents as a directory tree."""
     example_dir = _example_directory(example)
     crate_dir = _crate_directory(example_dir)
-    result_entity = _result_entity(crate_dir)
-    media_type = result_entity["encodingFormat"]
-
-    if media_type == "text/csv":
-        result_icon = "material-table"
-    elif "json" in media_type:
-        result_icon = "material-code-json"
-    elif media_type == "text/turtle":
-        result_icon = "material-code-braces"
-    else:
-        result_icon = "material-file-document-outline"
-
-    result_name = result_entity["@id"]
-    link_root = "/".join(
-        part.strip("/") for part in (link_prefix, example) if part.strip("/")
-    )
-    link_root = f"/{link_root}"
     crate_relative_path = crate_dir.relative_to(example_dir)
-    if crate_relative_path == Path("."):
-        crate_link_root = link_root
-        crate_name = example
-    else:
-        crate_link_root = f"{link_root}/{crate_relative_path.as_posix()}"
-        crate_name = crate_relative_path.name
-    lines = [f":material-folder-open: `{crate_name}/`  "]
-    entries = (
-        ("material-file-document-outline", "query.rq"),
-        (result_icon, result_name),
-        ("material-code-json", "ro-crate-metadata.json"),
+    crate_name = (
+        example if crate_relative_path == Path(".") else crate_relative_path.name
     )
-    for index, (icon, name) in enumerate(entries):
-        branch = "└──" if index == len(entries) - 1 else "├──"
+    lines = [f":material-folder-open: `{crate_name}/`  "]
+    files = _crate_files(crate_dir)
+    for index, file_path in enumerate(files):
+        media_type = _file_media_type(crate_dir, file_path.name)
+        icon = _file_icon(file_path.name, media_type)
+        branch = "└──" if index == len(files) - 1 else "├──"
         lines.append(
-            f"{branch} :{icon}: [`{name}`]({crate_link_root}/{name})  "
+            f"{branch} :{icon}: [`{file_path.name}`](#{_anchor_id(file_path.name)})  "
         )
     return "\n".join(lines)
 
 
-def response_table(example, link_prefix="examples/"):
-    """Render a short table derived from an example's saved response."""
+def file_tabs(example, repo_url, read_csv):
+    """Render the crate files as filename tabs with GitHub source links."""
     example_dir = _example_directory(example)
     crate_dir = _crate_directory(example_dir)
-    result_entity = _result_entity(crate_dir)
-    result_path = crate_dir / result_entity["@id"]
-    result_url = "/".join(
-        part.strip("/")
-        for part in (
-            link_prefix,
-            example,
-            result_path.relative_to(example_dir).as_posix(),
-        )
-    )
-    result_url = f"/{result_url}"
-    content = result_path.read_text()
-
-    if "json" in result_entity["encodingFormat"]:
-        rows, headers = _sparql_json(content)
-    elif "csv" in result_entity["encodingFormat"]:
-        rows, headers = _csv(content)
-    elif "xml" in result_entity["encodingFormat"]:
-        rows, headers = _sparql_xml(content)
-    else:
-        raise ValueError(f"Cannot render a tabular preview for {result_path}")
-
-    preview = rows[:PREVIEW_ROWS]
-    table = [
-        f"Showing {len(preview)} of {len(rows)} rows from the "
-        f"[captured response]({result_url}):",
-        "",
-        "| " + " | ".join(_cell(header) for header in headers) + " |",
-        "| " + " | ".join("---" for _ in headers) + " |",
+    files = _crate_files(crate_dir)
+    anchors = [
+        f'<span id="{_anchor_id(file_path.name)}" '
+        f'data-tab-target="{_tab_input_id(file_path.name)}"></span>'
+        for file_path in files
     ]
-    table.extend(
-        "| " + " | ".join(_cell(value) for value in row) + " |"
-        for row in preview
-    )
-    return "\n".join(table)
+    tabs = []
+    for file_path in files:
+        name = file_path.name
+        repository_path = file_path.relative_to(ROOT_DIR).as_posix()
+        github_url = f"{repo_url.rstrip('/')}/blob/main/{repository_path}"
+        tabs.append(
+            f'=== "{name}"\n\n'
+        )
+        content = file_path.read_text()
+        if name == "query.rq":
+            tabs.append(_code_block(content, "sparql"))
+        elif name == "ro-crate-metadata.json":
+            tabs.append(_code_block(content, "json"))
+        else:
+            media_type = _file_media_type(crate_dir, name)
+            if media_type == "text/csv":
+                table = read_csv(file_path.relative_to(ROOT_DIR).as_posix())
+                tabs.append(_indented_table(table))
+            elif "json" in media_type:
+                rows, headers = _sparql_json(content)
+                tabs.append(_table_preview(rows, headers, PREVIEW_ROWS))
+            elif "xml" in media_type:
+                rows, headers = _sparql_xml(content)
+                tabs.append(_table_preview(rows, headers, PREVIEW_ROWS))
+            else:
+                tabs.append(_code_block(content, _syntax_for(file_path)))
+        tabs.append(
+            f'\n    [:fontawesome-brands-github: `{name}`]({github_url})'
+            f'{{ .md-button .github-file-link }}\n'
+        )
+        tabs.append("\n")
+    return "\n\n".join(anchors) + "\n\n" + "\n".join(tabs)
 
 
 def source(path, repo_url, title="Source", collapsed=False):
@@ -128,7 +110,14 @@ def source(path, repo_url, title="Source", collapsed=False):
 def define_env(env):
     """Register documentation macros with mkdocs-macros-plugin."""
     env.macro(directory_preview)
-    env.macro(response_table)
+    env.macro(
+        lambda example: file_tabs(
+            example,
+            env.conf["repo_url"],
+            env.variables["macros"]["read_csv"],
+        ),
+        "file_tabs",
+    )
     env.macro(
         lambda path, title="Source", collapsed=False: source(
             path,
@@ -157,6 +146,85 @@ def _result_entity(example_dir):
         if entity.get("@type") == "File"
         and entity.get("@id", "").startswith("results.")
     )
+
+
+def _crate_files(crate_dir):
+    result_name = _result_entity(crate_dir)["@id"]
+    return tuple(
+        crate_dir / name
+        for name in ("query.rq", result_name, "ro-crate-metadata.json")
+    )
+
+
+def _file_media_type(crate_dir, file_name):
+    if file_name == "ro-crate-metadata.json":
+        return "application/ld+json"
+    entity = next(
+        entity
+        for entity in json.loads(
+            (crate_dir / "ro-crate-metadata.json").read_text()
+        )["@graph"]
+        if entity.get("@type") == "File" and entity.get("@id") == file_name
+    )
+    return entity["encodingFormat"]
+
+
+def _file_icon(file_name, media_type):
+    if file_name == "query.rq":
+        return "material-file-document-outline"
+    if file_name == "ro-crate-metadata.json":
+        return "material-code-json"
+    if media_type == "text/csv":
+        return "material-table"
+    if "json" in media_type:
+        return "material-code-json"
+    if media_type == "text/turtle":
+        return "material-code-braces"
+    return "material-file-document-outline"
+
+
+def _anchor_id(file_name):
+    return slugify_unicode(f"file-{file_name}", "-")
+
+
+def _tab_input_id(file_name):
+    return slugify_unicode(file_name, "-")
+
+
+def _syntax_for(path):
+    return {
+        ".json": "json",
+        ".rq": "sparql",
+        ".ttl": "turtle",
+        ".xml": "xml",
+    }.get(path.suffix.lower(), "text")
+
+
+def _code_block(content, syntax):
+    code = indent(content.rstrip("\n"), "    ")
+    return f"    ```{syntax}\n{code}\n    ```\n"
+
+
+def _table_preview(rows, headers, limit=None):
+    preview = rows if limit is None else rows[:limit]
+    lines = []
+    if len(preview) < len(rows):
+        lines.extend((f"Showing {len(preview)} of {len(rows)} rows.", ""))
+    lines.extend(
+        (
+            "| " + " | ".join(_cell(header) for header in headers) + " |",
+            "| " + " | ".join("---" for _ in headers) + " |",
+        )
+    )
+    lines.extend(
+        "| " + " | ".join(_cell(value) for value in row) + " |"
+        for row in preview
+    )
+    return "    " + "\n    ".join(lines) + "\n"
+
+
+def _indented_table(table):
+    return indent(table.rstrip("\n"), "    ") + "\n"
 
 
 def _crate_directory(example_dir):
@@ -205,12 +273,6 @@ def _sparql_xml(content):
             ]
         )
     return rows, headers
-
-
-def _csv(content):
-    reader = csv.reader(content.splitlines())
-    headers = next(reader)
-    return list(reader), headers
 
 
 def _cell(value):
