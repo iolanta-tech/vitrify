@@ -1,3 +1,7 @@
+---
+icon: material/map
+---
+
 # :material-map: Roadmap
 
 This page describes capabilities being considered for Vitrify. They are
@@ -13,5 +17,5 @@ planned work, not features of the current CLI, and no delivery dates are set.
   graph outputs for workflows that need them.
 
 The current CLI supports SPARQL retrieval with `vitrify sparql`. See the
-[command reference](command.md) for available options and the
-[output guide](output.md) for the RO-Crate files it writes today.
+[CLI](cli.md) for available options and the
+[RO-Crate output guide](outputs/ro-crate/index.md) for the RO-Crate files it writes today.
