@@ -40,3 +40,16 @@ is the hero; `ro-crate-metadata.json` is attached evidence, not a wrapper.
 The next step after Vitrify is local work (sparqld, Unix tools, Make/DVC) on
 that file. Vitrify is not a workflow runner and must not be invoked again
 unless the reader explicitly wants a new retrieval.
+
+## Example relationship
+
+The home page gives a quick preview of the EU-capitals retrieval.
+`examples/stdin.md` intentionally expands the same example with its query,
+result table, crate metadata, and rerun command. Keep this as a preview followed
+by a full walkthrough.
+
+## Home-page identity
+
+The home page's `# Vitrify` title is an identity heading paired with the
+wordmark, so it is the sole exception to the semantic-icon rule for rendered
+headings.
