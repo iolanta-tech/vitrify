@@ -3,7 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-Vitrify-blue)](https://vitrify.iolanta.tech/)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-Vitrify saves a SPARQL retrieval as an ordinary local file with attached RO-Crate evidence.
+Vitrify saves a SPARQL response as an ordinary local file, alongside the exact query and RO-Crate retrieval evidence.
 
 Install Vitrify and retrieve a Wikidata result:
 
@@ -17,6 +17,19 @@ echo 'SELECT ?label WHERE { ?country wdt:P463 wd:Q458; wdt:P36 ?capital . ?capit
   --to eu-capitals
 ```
 
-This writes `eu-capitals/results.csv` with `query.rq` and
-`ro-crate-metadata.json`. See the [documentation](https://vitrify.iolanta.tech/)
-for the command reference, output details, workflows, and roadmap.
+The output directory contains:
+
+```text
+eu-capitals/
+  results.csv
+  query.rq
+  ro-crate-metadata.json
+```
+
+`results.csv` is the endpoint response body. The metadata records retrieval
+details, including the endpoint, response media type, and checksums for the
+files. The same complete EU-capitals example appears on the
+[documentation home page](https://vitrify.iolanta.tech/), with its captured
+result and metadata. See the [CLI reference](https://vitrify.iolanta.tech/cli/)
+for options and the [roadmap](https://vitrify.iolanta.tech/roadmap/) for planned
+work.
