@@ -1,3 +1,7 @@
+---
+icon: material/flask
+---
+
 # :material-flask: Examples
 
 Each example shows a saved SPARQL query, a preview of its response, and the
