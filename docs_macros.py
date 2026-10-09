@@ -1,10 +1,14 @@
 """Macros for rendering Vitrify's saved examples in MkDocs."""
 
+import csv
 import html
+import io
 import json
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from textwrap import indent
+from urllib.parse import urlsplit
 
 from markdown.extensions.toc import slugify_unicode
 
@@ -35,7 +39,7 @@ def directory_preview(example):
     return "\n".join(lines)
 
 
-def file_tabs(example, repo_url, read_csv):
+def file_tabs(example, repo_url):
     """Render the crate files as filename tabs with GitHub source links."""
     example_dir = _example_directory(example)
     crate_dir = _crate_directory(example_dir)
@@ -61,8 +65,7 @@ def file_tabs(example, repo_url, read_csv):
         else:
             media_type = _file_media_type(crate_dir, name)
             if media_type == "text/csv":
-                table = read_csv(file_path.relative_to(ROOT_DIR).as_posix())
-                tabs.append(_indented_table(table))
+                tabs.append(_indented_table(_csv_table(content)))
             elif "json" in media_type:
                 rows, headers = _sparql_json(content)
                 tabs.append(_table_preview(rows, headers, PREVIEW_ROWS))
@@ -110,11 +113,14 @@ def source(path, repo_url, title="Source", collapsed=False):
 def define_env(env):
     """Register documentation macros with mkdocs-macros-plugin."""
     env.macro(directory_preview)
+    env.filter(
+        lambda text, spaces=0: "\n" + indent(text, " " * spaces) + "\n",
+        "add_indentation",
+    )
     env.macro(
         lambda example: file_tabs(
             example,
             env.conf["repo_url"],
-            env.variables["macros"]["read_csv"],
         ),
         "file_tabs",
     )
@@ -225,6 +231,52 @@ def _table_preview(rows, headers, limit=None):
 
 def _indented_table(table):
     return indent(table.rstrip("\n"), "    ") + "\n"
+
+
+def _csv_table(content):
+    """Render CSV headers and rows as an escaped HTML table."""
+    rows = csv.reader(io.StringIO(content, newline=""))
+    headers = next(rows, None)
+    if headers is None:
+        return ""
+
+    def row(values, tag):
+        cells = "".join(f"<{tag}>{_csv_cell(value)}</{tag}>" for value in values)
+        return f"<tr>{cells}</tr>"
+
+    return (
+        "<table>\n<thead>" + row(headers, "th") + "</thead>\n<tbody>\n"
+        + "\n".join(row(values, "td") for values in rows)
+        + "\n</tbody>\n</table>"
+    )
+
+
+def _csv_cell(value):
+    """Escape cell text and link HTTP(S) URLs with HTTPS destinations."""
+    pieces = []
+    position = 0
+    for match in re.finditer(r"https?://[^\s<>\"']+", value):
+        url = match.group().rstrip(".,;!")
+        for opening, closing in (("(", ")"), ("[", "]"), ("{", "}")):
+            while url.endswith(closing) and url.count(closing) > url.count(opening):
+                url = url[:-1]
+        pieces.append(html.escape(value[position:match.start()]))
+        escaped = html.escape(url)
+        try:
+            hostname = urlsplit(url).hostname
+        except ValueError:
+            hostname = None
+        if hostname:
+            destination = html.escape("https://" + url.split("://", 1)[1])
+            pieces.append(
+                f'<a href="{destination}" target="_blank" '
+                f'rel="noopener noreferrer">{escaped}</a>'
+            )
+        else:
+            pieces.append(escaped)
+        position = match.start() + len(url)
+    pieces.append(html.escape(value[position:]))
+    return "".join(pieces).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
 
 
 def _crate_directory(example_dir):
