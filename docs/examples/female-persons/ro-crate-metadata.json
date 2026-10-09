@@ -17,7 +17,7 @@
       "author": {
         "@id": "https://vitrify.iolanta.tech"
       },
-      "datePublished": "2026-10-04T18:48:57.396098525+00:00",
+      "datePublished": "2026-10-08T21:03:45.441152809+00:00",
       "description": "SPARQL retrieval materialized by Vitrify.",
       "hasPart": [
         {
@@ -30,22 +30,22 @@
       "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
       "name": "results.csv",
       "publisher": {
-        "@id": "https://query.wikidata.org/sparql"
+        "@id": "https://qlever.dev/api/wikidata"
       }
     },
     {
       "@id": "results.csv",
       "@type": "File",
-      "contentSize": "296",
+      "contentSize": "496",
       "encodingFormat": "text/csv",
-      "sha256": "343b6929b7712632f0f64a802695e73ff183c6c04a5e0df6227c9ed4297b8b0c"
+      "sha256": "17a696e45d0f12f490a2e0b4b4bc9e6c1735a599984016448f701faea9265d39"
     },
     {
       "@id": "query.rq",
       "@type": "File",
-      "contentSize": "264",
+      "contentSize": "854",
       "encodingFormat": "application/sparql-query",
-      "sha256": "e30e9c90b56f78d035ffcddb348432ec77b62ef371bc74e11f4d7d13c5089c4f"
+      "sha256": "622ae40accedf7f1a1c38bdb90d7d2873ec68e34abbd36bbb8e03e05470fa380"
     },
     {
       "@id": "https://vitrify.iolanta.tech",
@@ -55,7 +55,7 @@
       "version": "0.1.0"
     },
     {
-      "@id": "https://query.wikidata.org/sparql",
+      "@id": "https://qlever.dev/api/wikidata",
       "@type": "Organization"
     },
     {
@@ -65,14 +65,14 @@
         "@id": "https://vitrify.iolanta.tech"
       },
       "description": "HTTP 200; Accept: text/csv",
-      "endTime": "2026-10-04T18:48:57.396098525+00:00",
-      "identifier": "https://query.wikidata.org/sparql",
+      "endTime": "2026-10-08T21:03:45.441152809+00:00",
+      "identifier": "https://qlever.dev/api/wikidata",
       "instrument": {
         "@id": "https://vitrify.iolanta.tech"
       },
       "object": [
         {
-          "@id": "https://query.wikidata.org/sparql"
+          "@id": "https://qlever.dev/api/wikidata"
         },
         {
           "@id": "query.rq"
@@ -81,7 +81,7 @@
       "result": {
         "@id": "results.csv"
       },
-      "startTime": "2026-10-04T18:48:56.418479356+00:00"
+      "startTime": "2026-10-08T21:03:45.050539846+00:00"
     }
   ]
 }
