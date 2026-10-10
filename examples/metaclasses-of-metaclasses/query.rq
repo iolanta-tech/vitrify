@@ -1,0 +1,38 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?metaclass ?metaclassLabel ?instanceCount ?exampleInstance ?exampleInstanceLabel WHERE {
+  {
+    SELECT ?metaclass (COUNT(DISTINCT ?instance) AS ?instanceCount)
+           (MIN(STR(?instance)) AS ?exampleInstanceIRI) WHERE {
+      {
+        SELECT DISTINCT ?metaclass WHERE {
+          ?metaclass wdt:P31/wdt:P279* wd:Q19478619 .
+        }
+      }
+      ?instance wdt:P31 ?metaclass .
+      FILTER NOT EXISTS {
+        ?counterexample wdt:P31 ?metaclass .
+        FILTER NOT EXISTS {
+          ?counterexample wdt:P31/wdt:P279* wd:Q19478619 .
+        }
+      }
+    }
+    GROUP BY ?metaclass
+    ORDER BY DESC(?instanceCount) ?metaclass
+    LIMIT 10
+  }
+  BIND(IRI(?exampleInstanceIRI) AS ?exampleInstance)
+  OPTIONAL {
+    ?metaclass rdfs:label ?englishLabel .
+    FILTER(LANG(?englishLabel) = "en")
+  }
+  OPTIONAL {
+    ?exampleInstance rdfs:label ?exampleEnglishLabel .
+    FILTER(LANG(?exampleEnglishLabel) = "en")
+  }
+  BIND(COALESCE(?englishLabel, STRAFTER(STR(?metaclass), "entity/")) AS ?metaclassLabel)
+  BIND(COALESCE(?exampleEnglishLabel, STRAFTER(STR(?exampleInstance), "entity/")) AS ?exampleInstanceLabel)
+}
+ORDER BY DESC(?instanceCount) ?metaclass

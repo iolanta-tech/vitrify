@@ -1,0 +1,67 @@
+.md-typeset .admonition.example > .admonition-title,
+.md-typeset details.example > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.md-typeset p:has(> .md-button.github-file-link) {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.md-typeset .md-button.github-file-link {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.md-typeset .admonition.example > .admonition-title .example-source-link,
+.md-typeset details.example > summary .example-source-link {
+  margin-left: auto;
+  font-weight: normal;
+}
+
+@media screen and (min-width: 76.25em) {
+  .md-typeset .vitrify-workflow {
+    column-gap: 3rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .md-typeset .vitrify-workflow > ul > li {
+    overflow: visible;
+    position: relative;
+  }
+
+  .md-typeset .vitrify-workflow-arrow {
+    color: var(--md-primary-fg-color);
+    position: absolute;
+    right: -2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+
+  .md-typeset .vitrify-workflow-arrow svg {
+    height: 2rem;
+    width: 2rem;
+  }
+}
+
+@media screen and (max-width: 76.25em) {
+  .md-typeset .vitrify-workflow-arrow {
+    display: none;
+  }
+}
+
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned) {
+  background-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .vitrify-outputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

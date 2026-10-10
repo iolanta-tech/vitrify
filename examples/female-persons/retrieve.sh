@@ -1,0 +1,33 @@
+echo 'PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?person ?personLabel ?prizeLabel ?year WHERE {
+  {
+    SELECT DISTINCT ?prize WHERE {
+      { ?prize wdt:P279* wd:Q7191 . } # Nobel Prize
+      UNION
+      { BIND(wd:Q47170 AS ?prize) } # Economic Sciences
+    }
+  }
+  ?person p:P166 [
+    ps:P166 ?prize ;
+    pq:P585 ?awardDate
+  ] ;
+    wdt:P21 wd:Q6581072 . # sex or gender: female
+  BIND(YEAR(?awardDate) AS ?year)
+  ?person rdfs:label ?personLabel .
+  FILTER(LANG(?personLabel) = "en")
+  ?prize rdfs:label ?prizeLabel .
+  FILTER(LANG(?prizeLabel) = "en")
+}
+ORDER BY DESC(?year) ?person
+LIMIT 5' |
+  vitrify sparql \
+  --endpoint https://qlever.dev/api/wikidata \
+  --query - \
+  --format csv \
+  --to female-persons
