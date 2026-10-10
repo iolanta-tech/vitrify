@@ -12,6 +12,9 @@ EXAMPLES_DIR = PROJECT_DIR / "docs" / "examples"
 
 EXAMPLES = (
     ("female-persons", "retrieve.sh", "."),
+    ("top-metaclasses", "retrieve.sh", "."),
+    ("metaclasses-of-metaclasses", "retrieve.sh", "."),
+    ("fourth-order-classes", "retrieve.sh", "."),
     ("select-turtle", "retrieve.sh", "."),
     ("time-bounded-subclasses", "retrieve.sh", "."),
     ("basic-example", "input/retrieve.sh", "eu-capitals"),
