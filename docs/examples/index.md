@@ -18,6 +18,12 @@ examples use `echo` and standard input to keep their commands self-contained.
 - [EU capitals](eu-capitals.md) — five English capital labels in CSV.
 - [Query from a file](query-from-file.md) — save the EU-capitals query, then
   run it with `--query query.rq`.
+- [Top ten metaclasses](top-metaclasses.md) — metaclasses ranked by direct
+  instance counts in QLever.
+- [Metaclasses of metaclasses](metaclasses-of-metaclasses.md) — metaclasses
+  whose recorded instances are all metaclasses, with example instances.
+- [Fourth-order classes](fourth-order-classes.md) — all items explicitly
+  typed as fourth-order classes.
 - [Time-bounded subclasses](time-bounded-subclasses.md) — a JSON result table
   with subclass intervals.
 - [SELECT response returned as JSON](select-turtle.md) — a format negotiation
