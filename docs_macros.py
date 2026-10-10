@@ -158,7 +158,7 @@ def _crate_files(crate_dir):
     result_name = _result_entity(crate_dir)["@id"]
     return tuple(
         crate_dir / name
-        for name in ("query.rq", result_name, "ro-crate-metadata.json")
+        for name in (result_name, "ro-crate-metadata.json", "query.rq")
     )
 
 
