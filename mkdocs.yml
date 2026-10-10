@@ -52,6 +52,9 @@ nav:
       - EU capitals: examples/eu-capitals.md
       - Query from a file: examples/query-from-file.md
       - Female Nobel laureates: examples/female-persons.md
+      - Top ten metaclasses: examples/top-metaclasses.md
+      - Metaclasses of metaclasses: examples/metaclasses-of-metaclasses.md
+      - Fourth-order classes: examples/fourth-order-classes.md
       - Time-bounded subclasses: examples/time-bounded-subclasses.md
       - SELECT response returned as JSON: examples/select-turtle.md
   - cli.md
