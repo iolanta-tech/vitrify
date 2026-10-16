@@ -15,9 +15,16 @@ OPTION_SEPARATOR = "--"
 
 def _read_tree(revision, repository):
     tree = str(
-        sh.git("rev-parse", "--verify", f"{revision}^{{tree}}", _cwd=str(repository))
+        sh.git(
+            "--no-pager",
+            "rev-parse",
+            "--verify",
+            f"{revision}^{{tree}}",
+            _cwd=str(repository),
+        )
     ).strip()
     entries = sh.git(
+        "--no-pager",
         "ls-tree",
         "-r",
         NULL_SEPARATOR,
@@ -75,7 +82,9 @@ def _local_changes(base, repository):
             EXAMPLE_FILES,
         ],
     ):
-        output = sh.git(*command, _cwd=str(repository), _return_cmd=True).stdout
+        output = sh.git(
+            "--no-pager", *command, _cwd=str(repository), _return_cmd=True
+        ).stdout
         changed.update(_decode_paths(output))
     return changed
 
