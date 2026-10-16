@@ -1,10 +1,13 @@
 site_name: Vitrify
 site_description: Turn a SPARQL retrieval into a durable local file.
 repo_url: https://github.com/iolanta-tech/vitrify
+hooks:
+  - example_history.py
 extra_css:
   - stylesheets/extra.css
 extra_javascript:
   - javascripts/file-tabs.js
+  - javascripts/example-history.js
 
 theme:
   name: material
