@@ -2,16 +2,21 @@
 hide: [toc]
 ---
 
-# :material-code-json: SELECT response returned as JSON
+# :material-code-json: SELECT with Turtle requested
 
 {{ history_chart('select-turtle') }}
 
-This example asks QLever for Turtle while running a `SELECT` query. The
-endpoint returns SPARQL Results JSON, and Vitrify records that actual response
-type even though the requested format determines the `results.ttl` filename.
+This example requests Turtle for a `SELECT` query. The endpoint may return
+another response format or reject the request. Vitrify records the actual
+response type and chooses the filename extension from it, falling back to
+`.ttl` if the response media type is missing or unrecognized.
+
+The saved captures below were created by an earlier version that used the
+requested extension, so their XML or JSON responses retain the `results.ttl`
+filename.
 
 ```bash
---8<-- "docs/examples/select-turtle/retrieve.sh"
+{{ retrieval_command('select-turtle') }}
 ```
 
 {{ directory_preview('select-turtle') }}

@@ -92,8 +92,8 @@ fn record_attempt(
         }
         check_content_encoding(&response)?;
         media_type = response_media_type(&response);
-        let extension = exchange.format.map(|f| f.extension)
-            .or_else(|| sparql::extension_for_media_type(media_type.as_deref()))
+        let extension = sparql::extension_for_media_type(media_type.as_deref())
+            .or_else(|| exchange.format.map(|f| f.extension))
             .unwrap_or_else(|| {
                 eprintln!("warning: no extension is known for the response Content-Type; writing results.dat");
                 "dat"
@@ -421,6 +421,60 @@ mod tests {
             result_entity(&dir, "results.dat")
                 .get("encodingFormat")
                 .is_none()
+        );
+    }
+
+    #[test]
+    fn response_media_type_overrides_requested_extension() {
+        let dir = unique_dir();
+        let body = br#"{"head":{"vars":[]},"results":{"bindings":[]}}"#;
+        write_crate(
+            response(
+                200,
+                Some("Application/SPARQL-Results+JSON; charset=utf-8"),
+                body,
+            ),
+            &dir,
+            &exchange(),
+        )
+        .unwrap();
+
+        assert_eq!(fs::read(dir.join("results.json")).unwrap(), body);
+        assert!(!dir.join("results.csv").exists());
+        assert_eq!(
+            crate_entity(&dir, "#retrieval")["result"]["@id"],
+            "results.json"
+        );
+    }
+
+    #[test]
+    fn missing_or_unknown_media_type_falls_back_to_requested_extension() {
+        for media_type in [None, Some("application/octet-stream")] {
+            let dir = unique_dir();
+            write_crate(response(200, media_type, b"s\n"), &dir, &exchange()).unwrap();
+            assert_eq!(fs::read(dir.join("results.csv")).unwrap(), b"s\n");
+            assert_eq!(
+                crate_entity(&dir, "#retrieval")["result"]["@id"],
+                "results.csv"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_media_type_without_requested_format_uses_dat() {
+        let dir = unique_dir();
+        let mut exchange = exchange();
+        exchange.format = None;
+        write_crate(
+            response(200, Some("application/octet-stream"), b"x"),
+            &dir,
+            &exchange,
+        )
+        .unwrap();
+        assert_eq!(fs::read(dir.join("results.dat")).unwrap(), b"x");
+        assert_eq!(
+            result_entity(&dir, "results.dat")["encodingFormat"],
+            "application/octet-stream"
         );
     }
 

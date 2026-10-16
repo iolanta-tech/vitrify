@@ -10,10 +10,10 @@ With Vitrify installed, run this command in the directory where you want to
 save `metaclasses-of-metaclasses/`:
 
 ```bash
---8<-- "docs/examples/metaclasses-of-metaclasses/retrieve.sh"
+{{ retrieval_command('metaclasses-of-metaclasses') }}
 ```
 
-The query finds explicitly typed metaclasses in QLever's Wikidata snapshot
+The query finds explicitly typed metaclasses in Wikidata
 whose recorded direct instances are all explicitly typed metaclasses too.
 It requires at least one instance, ranks up to ten matches by distinct
 instance count, and shows one example instance per match. Metaclass typing

@@ -9,7 +9,7 @@ hide: [toc]
 This Wikidata query returns five EU-capital labels in English.
 
 ```bash
---8<-- "docs/examples/basic-example/input/retrieve.sh"
+{{ retrieval_command('basic-example') }}
 ```
 
 {{ directory_preview('basic-example') }}
