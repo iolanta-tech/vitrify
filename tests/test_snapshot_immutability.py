@@ -3,6 +3,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import sh
 
@@ -13,6 +14,7 @@ from project_checks.entrypoints import standalone_python_scripts
 EXECUTABLE_MODE = 0o755
 QUERY_FILE = "query.rq"
 CURRENT_REVISION = "HEAD"
+STAGE_COMMAND = "add"
 
 
 class SnapshotRepository(unittest.TestCase):
@@ -43,7 +45,7 @@ class SnapshotRepository(unittest.TestCase):
         destination.write_text(source_text)
 
     def commit(self):
-        self.git("add", "--all")
+        self.git(STAGE_COMMAND, "--all")
         self.git("commit", "--quiet", "-m", "Save test state")
 
     def changes(self):
@@ -121,7 +123,7 @@ class LocalSnapshotTests(SnapshotRepository):
         added = f"{self.capture}/evidence.json"
         for name in (edited, staged, added):
             self.write(name, "changed")
-        self.git("add", staged)
+        self.git(STAGE_COMMAND, staged)
         (self.repository / deleted).unlink()
         self.assertEqual(
             changed_snapshots(self.base, repository=self.repository),
@@ -140,7 +142,7 @@ class LocalSnapshotTests(SnapshotRepository):
     def test_local_hidden_staged_edits(self):
         name = f"{self.capture}/query.rq"
         self.write(name, "staged change")
-        self.git("add", name)
+        self.git(STAGE_COMMAND, name)
         self.write(name, "original\n")
         self.assertEqual(
             changed_snapshots(self.base, repository=self.repository), [name]
@@ -167,6 +169,16 @@ class LocalSnapshotTests(SnapshotRepository):
         self.write("library.py", "def transform(value):\n    return value\n")
         self.write("tests/test_example.py", 'if __name__ == "__main__":\n    pass\n')
         self.assertEqual(standalone_python_scripts(self.repository), [])
+
+
+class GitPagerTests(SnapshotRepository):
+    def test_pager_cannot_hide_snapshot_edits(self):
+        name = f"{self.capture}/{QUERY_FILE}"
+        self.write(name, "changed snapshot")
+        self.git(STAGE_COMMAND, name)
+        with patch.dict("os.environ", {"GIT_PAGER": "cat >/dev/null", "TERM": "xterm"}):
+            changed = changed_snapshots(self.base, repository=self.repository)
+        self.assertEqual(changed, [name])
 
 
 if __name__ == "__main__":
