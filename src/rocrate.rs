@@ -39,7 +39,6 @@ pub struct Retrieval {
     pub started: DateTime<Utc>,
     pub ended: DateTime<Utc>,
     pub duration: f64,
-    pub row_count: Option<u64>,
 }
 
 /// Builds an RO-Crate 1.2 metadata document for one SPARQL result.
@@ -52,9 +51,6 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
     });
     if let Some(media_type) = &retrieval.media_type {
         result_file["encodingFormat"] = json!(media_type);
-    }
-    if retrieval.row_count.is_some() {
-        result_file["additionalProperty"] = json!([{ "@id": "#row-count" }]);
     }
     let query_file = json!({
         "@id": QUERY_FILE_NAME,
@@ -126,12 +122,6 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
 
     let graph = document["@graph"].as_array_mut().unwrap();
     graph.push(duration_property(retrieval.duration));
-    if let Some(count) = retrieval.row_count {
-        graph.push(json!({
-            "@id": "#row-count", "@type": "PropertyValue", "propertyID": "row-count",
-            "name": "Row count", "value": count, "unitText": "rows"
-        }));
-    }
     serde_json::to_string_pretty(&document).expect("the document is serializable") + "\n"
 }
 
@@ -246,7 +236,6 @@ mod tests {
             started: Utc.with_ymd_and_hms(2026, 9, 27, 12, 0, 0).unwrap(),
             ended: Utc.with_ymd_and_hms(2026, 9, 27, 12, 0, 1).unwrap(),
             duration: 1.0,
-            row_count: None,
         }
     }
 
