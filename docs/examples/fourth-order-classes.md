@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-layers: Fourth-order classes
 
+{{ history_chart('fourth-order-classes') }}
+
 With Vitrify installed, run this command in the directory where you want to
 save `fourth-order-classes/`:
 
