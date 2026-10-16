@@ -50,5 +50,6 @@ Vitrify saves successful response bytes unchanged. The requested format does
 not guarantee the endpoint returns that media type; use the recorded
 `Content-Type` to identify the response.
 
-A non-success HTTP response is an error and does not produce a successful
-result crate.
+A non-success HTTP response returns a nonzero exit status and saves the failed
+retrieval in the [RO-Crate metadata](outputs/ro-crate/index.md), including its
+error and duration.
