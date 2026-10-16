@@ -59,7 +59,7 @@ nav:
       - Metaclasses of metaclasses: examples/metaclasses-of-metaclasses.md
       - Fourth-order classes: examples/fourth-order-classes.md
       - Time-bounded subclasses: examples/time-bounded-subclasses.md
-      - SELECT response returned as JSON: examples/select-turtle.md
+      - SELECT with Turtle requested: examples/select-turtle.md
   - cli.md
   - Outputs:
       - outputs/index.md

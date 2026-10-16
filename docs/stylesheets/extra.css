@@ -162,3 +162,17 @@
 .history-outcome-success .history-icon { color: #198754; }
 .history-outcome-failure .history-icon { color: #b42318; }
 .history-outcome-incomplete .history-icon { color: #806000; }
+
+.md-typeset .example-endpoints {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  margin: -0.8rem 0 1rem;
+}
+.example-endpoints a { padding: 0.4rem 0; color: var(--md-default-fg-color--light); }
+.example-endpoints a[aria-current="page"] {
+  color: var(--md-primary-fg-color);
+  border-bottom: 2px solid currentColor;
+  font-weight: 700;
+}
+.md-typeset .example-endpoints + .history-detail { margin-top: 0; }

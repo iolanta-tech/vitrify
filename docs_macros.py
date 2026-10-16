@@ -17,6 +17,7 @@ from mkdocs.utils import get_relative_url
 
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 from example_history import captures, selected_capture
+from example_endpoints import ENDPOINTS, default_endpoint, retrieval_command
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
@@ -25,10 +26,12 @@ PREVIEW_ROWS = 5
 RO_CRATE_URL = "https://www.researchobject.org/ro-crate/"
 
 
-def directory_preview(example, attempt=None):
+def directory_preview(example, attempt=None, endpoint=None):
     """Render only the generated crate contents as a directory tree."""
     example_dir = _example_directory(example)
-    crate_dir = selected_capture(example, attempt).directory
+    if not captures(example, endpoint):
+        return ""
+    crate_dir = selected_capture(example, attempt, endpoint).directory
     crate_name = "eu-capitals" if example == "basic-example" else example
     lines = [f":material-folder-open: `{crate_name}/`  "]
     files = _crate_files(crate_dir)
@@ -42,9 +45,11 @@ def directory_preview(example, attempt=None):
     return "\n".join(lines)
 
 
-def file_tabs(example, repo_url, attempt=None, page_url=""):
+def file_tabs(example, repo_url, attempt=None, page_url="", endpoint=None):
     """Render the crate files as filename tabs with GitHub source links."""
-    capture = selected_capture(example, attempt)
+    if not captures(example, endpoint):
+        return ""
+    capture = selected_capture(example, attempt, endpoint)
     crate_dir = capture.directory
     files = _crate_files(crate_dir)
     anchors = [
@@ -112,20 +117,28 @@ def capture_detail(capture):
     return " · ".join(parts)
 
 
-def history_chart(example, attempt=None, page_url=""):
+def history_chart(example, attempt=None, page_url="", endpoint=None):
     """Render fixed-height navigation to every saved retrieval."""
-    saved = captures(example)
-    selected = selected_capture(example, attempt)
+    endpoint = endpoint or default_endpoint(example)
+    saved = captures(example, endpoint)
     page_name = "eu-capitals" if example == "basic-example" else example
     if page_url.startswith("examples/query-from-file/"):
         page_name = "query-from-file"
+    endpoint_tabs = '<nav class="example-endpoints" aria-label="Query endpoint">' + "".join(
+        f'<a href="{get_relative_url(f"examples/{page_name}/{key}/", page_url)}"'
+        + (' aria-current="page"' if key == endpoint else '')
+        + f'>{label}</a>' for key, (label, _) in ENDPOINTS.items()
+    ) + '</nav>'
+    if not saved:
+        return endpoint_tabs + '<p>No saved retrievals for this endpoint yet.</p>'
+    selected = selected_capture(example, attempt, endpoint)
     maximum = max((capture.row_count or 0 for capture in saved), default=0)
     links = []
     for capture in saved:
         selected_attribute = ' aria-current="page"' if capture.identifier == selected.identifier else ""
         detail = html.escape(capture_detail(capture), quote=True)
         height = max(3, 80 * capture.row_count / maximum) if maximum and capture.row_count is not None else 3
-        destination = get_relative_url(f"examples/{page_name}/{capture.identifier}/", page_url)
+        destination = get_relative_url(f"examples/{page_name}/{endpoint}/{capture.identifier}/", page_url)
         unknown = " history-unknown" if capture.row_count is None else ""
         if capture.row_count is None:
             graphic = (
@@ -173,7 +186,7 @@ def history_chart(example, attempt=None, page_url=""):
     separator = '<span class="history-separator" aria-hidden="true">·</span>'
     information = '<p class="history-detail" aria-label="Selected retrieval">' + separator.join(fields) + '</p>'
     return (
-        information
+        endpoint_tabs + information
         + '<section class="example-history" aria-label="Retrieval history">'
         '<div class="history-heading"><span>Response lines</span>'
         '<span class="history-controls"><button type="button" data-history-scroll="-1" aria-label="Earlier retrievals">←</button>'
@@ -217,8 +230,13 @@ def define_env(env):
     def attempt():
         return env.page.meta.get("history_attempt")
 
-    env.macro(lambda example: directory_preview(example, attempt()), "directory_preview")
-    env.macro(lambda example: history_chart(example, attempt(), env.page.url), "history_chart")
+    def endpoint(example):
+        return env.page.meta.get("history_endpoint") or default_endpoint(example)
+
+    env.macro(lambda example: directory_preview(example, attempt(), endpoint(example)), "directory_preview")
+    env.macro(lambda example: history_chart(example, attempt(), env.page.url, endpoint(example)), "history_chart")
+    env.macro(lambda example: retrieval_command(example, endpoint(example)), "retrieval_command")
+    env.macro(lambda: ENDPOINTS[endpoint("basic-example")][1], "query_endpoint")
     env.filter(
         lambda text, spaces=0: "\n" + indent(text, " " * spaces) + "\n",
         "add_indentation",
@@ -227,7 +245,7 @@ def define_env(env):
         lambda example: file_tabs(
             example,
             env.conf["repo_url"],
-            attempt(), env.page.file.src_uri,
+            attempt(), env.page.file.src_uri, endpoint(example),
         ),
         "file_tabs",
     )

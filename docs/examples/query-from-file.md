@@ -16,7 +16,7 @@ hide: [toc]
 
 ```bash
 vitrify sparql \
-  --endpoint https://query.wikidata.org/sparql \
+  --endpoint {{ query_endpoint() }} \
   --query query.rq \
   --format csv \
   --to eu-capitals

@@ -100,6 +100,37 @@ fn temp_dir() -> PathBuf {
 const SELECT: &str = "SELECT ?s WHERE { ?s ?p ?o } LIMIT 1";
 
 #[test]
+fn response_content_type_names_the_file_while_format_sets_accept() {
+    let body = b"s\nhttp://example.org/a\n";
+    let fixture = spawn("Text/CSV; charset=utf-8", body);
+    let dir = temp_dir();
+    Command::cargo_bin("vitrify")
+        .unwrap()
+        .args(["sparql", "--endpoint", &fixture.base_url, "--query", "-"])
+        .args(["--format", "turtle", "--to"])
+        .arg(&dir)
+        .write_stdin(SELECT)
+        .assert()
+        .success();
+
+    assert_eq!(
+        fixture.captured.lock().unwrap().accept.as_deref(),
+        Some("text/turtle")
+    );
+    assert_eq!(fs::read(dir.join("results.csv")).unwrap(), body);
+    assert!(!dir.join("results.ttl").exists());
+    let document: Value =
+        serde_json::from_slice(&fs::read(dir.join("ro-crate-metadata.json")).unwrap()).unwrap();
+    let action = document["@graph"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entity| entity["@id"] == "#retrieval")
+        .unwrap();
+    assert_eq!(action["result"]["@id"], "results.csv");
+}
+
+#[test]
 fn posts_query_from_file_verbatim_and_writes_the_body() {
     let fixture = spawn("text/csv;charset=utf-8", b"s\nhttp://example.org/a\n");
     let dir = temp_dir();

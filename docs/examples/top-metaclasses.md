@@ -10,10 +10,10 @@ With Vitrify installed, run this command in the directory where you want to
 save `top-metaclasses/`:
 
 ```bash
---8<-- "docs/examples/top-metaclasses/retrieve.sh"
+{{ retrieval_command('top-metaclasses') }}
 ```
 
-The query ranks metaclasses in QLever's Wikidata snapshot by their number of
+The query ranks metaclasses in Wikidata by their number of
 distinct direct `instance of` (P31) statements. Candidates are explicitly typed
 metaclasses: they have an
 `instance of` type equal to [metaclass](https://www.wikidata.org/wiki/Q19478619)

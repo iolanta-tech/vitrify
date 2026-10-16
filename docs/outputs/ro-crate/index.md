@@ -15,9 +15,9 @@ female-persons/
 ```
 
 `results.<extension>` is the ordinary response body, stored unchanged. Its
-extension comes from `--format` when supplied, or from a recognized response
-`Content-Type` when format selection is left to the endpoint. A missing or
-unrecognized response media type produces `results.dat`.
+extension comes from a recognized response `Content-Type`. If that media type
+is missing or unrecognized, Vitrify falls back to `--format`, then to `.dat`
+when no format was requested.
 
 `query.rq` contains the exact query text sent to the endpoint. It is included
 even when the query was read from standard input.
@@ -50,8 +50,8 @@ Open the complete example metadata file:
 
 A successful retrieval into an existing directory overwrites `query.rq`, the
 result file with the selected extension, and `ro-crate-metadata.json`. Result
-files with other extensions remain: rerunning with `--format json` after
-`--format csv` leaves both `results.json` and `results.csv`, while the new
+files with other extensions remain: receiving JSON after a previous CSV
+response leaves both `results.json` and `results.csv`, while the new
 metadata describes only `results.json`. Use a new directory or preserve the
 existing capture in version control before retrieving again.
 
@@ -68,7 +68,8 @@ not be available.
 
 ## :material-chart-bar: Example history
 
-Each example page shows saved retrievals in a row-count chart beneath its title.
+Each example has WDQS and QLever tabs, each with its own command, saved files,
+and response-line history.
 Select a bar to open that attempt's permanent page. The newest attempt is
 selected by default, including failures. Hover or focus a bar for its timestamp,
 outcome, row count, and duration. A hollow `?` marker indicates an unavailable
@@ -77,7 +78,7 @@ bar. Older captures use estimated durations derived from their recorded
 timestamps, marked with `≈`.
 
 From the repository root, with the project environment activated, append a new
-capture for every example:
+capture for every example on both endpoints (14 retrievals):
 
 ```sh
 cargo build
@@ -85,7 +86,7 @@ j examples
 ```
 
 The runner uses the local debug build when available, otherwise `vitrify` from
-`PATH`. It runs the displayed scripts in temporary directories and saves
+`PATH`. It runs the displayed endpoint variants sequentially in temporary directories and saves
 Vitrify's output in new timestamped directories. Earlier captures stay intact.
 It continues after individual failures, validates saved crates against RO-Crate
 1.2, and exits nonzero if any retrieval or validation failed. Validation results

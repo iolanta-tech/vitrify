@@ -8,6 +8,8 @@ from pathlib import Path
 
 from mkdocs.structure.files import File, InclusionLevel
 
+from example_endpoints import ENDPOINTS, default_endpoint
+
 ROOT_DIR = Path(__file__).parent.resolve()
 EXAMPLES_DIR = ROOT_DIR / "docs" / "examples"
 PAGE_EXAMPLES = {
@@ -47,6 +49,7 @@ class Capture:
     row_count: int | None
     error: str | None
     byte_size: int | None = None
+    endpoint: str | None = None
 
 
 def legacy_row_count(directory, result):
@@ -87,10 +90,12 @@ def read_capture(directory, identifier=None):
         byte_size = None
     if byte_size is not None and byte_size < 0:
         byte_size = None
-    return Capture(directory, identifier or timestamp_id(action["startTime"]), started, status, duration, estimated, count, error, byte_size)
+    requested_endpoint = entities["./"].get("publisher", {}).get("@id")
+    endpoint = next((key for key, (_, url) in ENDPOINTS.items() if url == requested_endpoint), None)
+    return Capture(directory, identifier or timestamp_id(action["startTime"]), started, status, duration, estimated, count, error, byte_size, endpoint)
 
 
-def captures(example):
+def captures(example, endpoint=None):
     directory = (EXAMPLES_DIR / example).resolve()
     if not directory.is_relative_to(EXAMPLES_DIR) or not directory.is_dir():
         raise ValueError(f"Invalid example directory: {example}")
@@ -104,11 +109,13 @@ def captures(example):
     identifiers = [capture.identifier for capture in result]
     if len(set(identifiers)) != len(identifiers):
         raise ValueError(f"Duplicate attempt timestamp in {directory}")
+    if endpoint is not None:
+        result = [capture for capture in result if capture.endpoint == endpoint]
     return sorted(result, key=lambda capture: (capture.started, capture.identifier))
 
 
-def selected_capture(example, identifier=None):
-    saved = captures(example)
+def selected_capture(example, identifier=None, endpoint=None):
+    saved = captures(example, endpoint)
     if not saved:
         raise ValueError(f"No saved retrievals for {example}")
     if identifier is None:
@@ -117,28 +124,35 @@ def selected_capture(example, identifier=None):
 
 
 def on_files(files, config):
-    """Generate permanent attempt pages from the existing example templates."""
+    """Generate endpoint views and permanent retrieval pages from example templates."""
     for page, example in PAGE_EXAMPLES.items():
         template = (EXAMPLES_DIR / f"{page}.md").read_text()
+        variants = [(f"{endpoint}.md", endpoint, None) for endpoint in ENDPOINTS]
         for capture in captures(example):
-            adjusted = re.sub(r"(\]\()(?!(?:[a-z]+:|/|#))([^\s)]+)", r"\1../\2", template)
-            content = adjusted.replace("---\n", f"---\nhistory_attempt: {capture.identifier}\n", 1)
+            variants.append((f"{capture.identifier}.md", capture.endpoint, capture.identifier))
+            if capture.endpoint:
+                variants.append((f"{capture.endpoint}/{capture.identifier}.md", capture.endpoint, capture.identifier))
+        for path, endpoint, identifier in variants:
+            depth = path.count("/") + 1
+            adjusted = re.sub(r"(\]\()(?!(?:[a-z]+:|/|#))([^\s)]+)", lambda match: match[1] + "../" * depth + match[2], template)
+            metadata = f"history_endpoint: {endpoint or default_endpoint(example)}\n"
+            if identifier:
+                metadata += f"history_attempt: {identifier}\n"
+            content = adjusted.replace("---\n", "---\n" + metadata, 1)
             files.append(File.generated(
-                config, f"examples/{page}/{capture.identifier}.md",
+                config, f"examples/{page}/{path}",
                 content=content, inclusion=InclusionLevel.NOT_IN_NAV,
             ))
     return files
 
 
 def on_nav(nav, config, files):
-    """Keep dated retrievals within their example's navigation section."""
+    """Keep endpoint and dated views within their example's navigation section."""
     for file in files:
         if file.page is None or not file.src_uri.startswith("examples/"):
             continue
         parts = file.src_uri.split("/")
-        if len(parts) != 3 or parts[1] not in PAGE_EXAMPLES:
-            continue
-        if not TIMESTAMP.fullmatch(Path(parts[2]).stem):
+        if len(parts) < 3 or parts[1] not in PAGE_EXAMPLES:
             continue
         canonical = files.get_file_from_path(f"examples/{parts[1]}.md")
         file.page.parent = canonical.page.parent

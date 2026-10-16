@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import example_endpoints
 import example_history
 import jeeves
 
@@ -72,13 +73,45 @@ class HistoryTests(unittest.TestCase):
         metadata.write_text(json.dumps(document))
         self.assertIsNone(example_history.read_capture(directory).row_count)
 
+    def test_endpoint_histories_are_disjoint_and_never_fall_back(self):
+        directory = self.root / "first"
+        with patch.object(example_history, "EXAMPLES_DIR", self.root):
+            self.assertEqual(len(example_history.captures("first", "qlever")), 1)
+            self.assertEqual(example_history.captures("first", "wdqs"), [])
+            with self.assertRaises(ValueError):
+                example_history.selected_capture("first", endpoint="wdqs")
+            newer = directory / "2026-10-16T120000Z"
+            shutil.copytree(directory, newer, ignore=shutil.ignore_patterns("2026-*"))
+            metadata = newer / "ro-crate-metadata.json"
+            document = json.loads(metadata.read_text())
+            entities = {entity["@id"]: entity for entity in document["@graph"]}
+            entities["./"]["publisher"]["@id"] = example_endpoints.ENDPOINTS["wdqs"][1]
+            entities["#retrieval"]["startTime"] = "2026-10-16T12:00:00Z"
+            metadata.write_text(json.dumps(document))
+            self.assertEqual(len(example_history.captures("first", "wdqs")), 1)
+            self.assertEqual(len(example_history.captures("first", "qlever")), 1)
+            self.assertEqual(example_history.selected_capture("first", endpoint="wdqs").directory, newer)
+            entities["./"].pop("publisher")
+            metadata.write_text(json.dumps(document))
+            self.assertEqual(example_history.captures("first", "wdqs"), [])
+
+    def test_commands_only_change_the_endpoint(self):
+        for example in set(example_history.PAGE_EXAMPLES.values()):
+            commands = [example_endpoints.retrieval_command(example, endpoint).replace(url, "ENDPOINT")
+                        for endpoint, (_, url) in example_endpoints.ENDPOINTS.items()]
+            self.assertEqual(commands[0], commands[1])
+            self.assertIn("--format ", commands[0])
+        command = example_endpoints.retrieval_command("basic-example", "qlever")
+        for prefix in ("wd:", "wdt:", "rdfs:"):
+            self.assertIn("PREFIX " + prefix, command)
+
     def test_runner_appends_and_continues_after_retrieval_failure(self):
         validator = self.root / "bin" / "rocrate-validator"
         validator.parent.mkdir()
         validator.write_text("#!/bin/sh\nexit 0\n")
         validator.chmod(0o755)
         for name in ("first", "second"):
-            commands = [f"mkdir {name}"]
+            commands = ["# --endpoint https://query.wikidata.org/sparql", f"mkdir {name}"]
             commands.extend(f"cp {shlex.quote(str(self.fixture / filename))} {name}/" for filename in self.baseline_files)
             commands.append("exit 1" if name == "first" else "exit 0")
             (self.root / name / "retrieve.sh").write_text("\n".join(commands) + "\n")
@@ -90,7 +123,7 @@ class HistoryTests(unittest.TestCase):
                     jeeves.examples()
         for name in ("first", "second"):
             attempts = [child for child in (self.root / name).iterdir() if child.is_dir()]
-            self.assertEqual(len(attempts), 2)
+            self.assertEqual(len(attempts), 4)
             for attempt in attempts:
                 self.assertEqual({file.name for file in attempt.iterdir()}, set(self.baseline_files))
         self.assertEqual((self.root / "first" / "results.csv").read_bytes(), before)
