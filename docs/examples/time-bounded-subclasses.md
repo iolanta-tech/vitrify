@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-clock-outline: Time-bounded subclasses
 
+{{ history_chart('time-bounded-subclasses') }}
+
 This Wikidata query finds subclass statements with start and end qualifiers,
 then returns their English labels. The captured JSON response contains 176
 bindings.
