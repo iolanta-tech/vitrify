@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-sort-numeric-descending: Top ten metaclasses
 
+{{ history_chart('top-metaclasses') }}
+
 With Vitrify installed, run this command in the directory where you want to
 save `top-metaclasses/`:
 
