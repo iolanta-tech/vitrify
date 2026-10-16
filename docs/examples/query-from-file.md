@@ -4,13 +4,15 @@ hide: [toc]
 
 # :material-file-document-outline: Query from a file
 
-Create a file named `query.rq` in your working directory with this content:
+{{ history_chart('basic-example') }}
+
+## :material-file-document-edit-outline: Save as `query.rq`
 
 ```sparql
---8<-- "docs/examples/basic-example/eu-capitals/query.rq"
+--8<-- "docs/examples/basic-example/input/query.rq"
 ```
 
-From the same directory, run:
+## :material-console: Run the query
 
 ```bash
 vitrify sparql \
