@@ -15,7 +15,7 @@ For CLI commands, arguments, and output behavior, start with
 - `j serve` starts the documentation site at `http://localhost:6453`.
 - `j examples` reruns every displayed retrieval script and validates the
   resulting crates against the RO-Crate 1.2 profile. It contacts the example
-  endpoints and rewrites their captured artifacts, so run it only when a
+  endpoints and appends timestamped captures, so run it only when a
   deliberate refresh is in scope.
 
 ## Reviews
