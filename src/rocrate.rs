@@ -38,6 +38,8 @@ pub struct Retrieval {
     pub final_url: String,
     pub started: DateTime<Utc>,
     pub ended: DateTime<Utc>,
+    pub duration: f64,
+    pub row_count: Option<u64>,
 }
 
 /// Builds an RO-Crate 1.2 metadata document for one SPARQL result.
@@ -51,6 +53,9 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
     if let Some(media_type) = &retrieval.media_type {
         result_file["encodingFormat"] = json!(media_type);
     }
+    if retrieval.row_count.is_some() {
+        result_file["additionalProperty"] = json!([{ "@id": "#row-count" }]);
+    }
     let query_file = json!({
         "@id": QUERY_FILE_NAME,
         "@type": "File",
@@ -63,7 +68,7 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
         Some(accept) => format!("HTTP {}; Accept: {accept}", retrieval.status),
         None => format!("HTTP {}; Accept: omitted", retrieval.status),
     };
-    let document = json!({
+    let mut document = json!({
         "@context": CONTEXT,
         "@graph": [
             {
@@ -78,6 +83,7 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
                 "name": retrieval.result_name,
                 "description": "SPARQL retrieval materialized by Vitrify.",
                 "datePublished": retrieval.ended.to_rfc3339(),
+                "additionalProperty": [{"@id": "#retrieval-duration"}],
                 "license": LICENSE_NOTICE,
                 "hasPart": [
                     { "@id": retrieval.result_name },
@@ -102,6 +108,7 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
             {
                 "@id": "#retrieval",
                 "@type": "CreateAction",
+                "actionStatus": { "@id": "http://schema.org/CompletedActionStatus" },
                 "startTime": retrieval.started.to_rfc3339(),
                 "endTime": retrieval.ended.to_rfc3339(),
                 "instrument": { "@id": "https://vitrify.iolanta.tech" },
@@ -117,7 +124,103 @@ pub fn metadata_json(retrieval: &Retrieval) -> String {
         ],
     });
 
+    let graph = document["@graph"].as_array_mut().unwrap();
+    graph.push(duration_property(retrieval.duration));
+    if let Some(count) = retrieval.row_count {
+        graph.push(json!({
+            "@id": "#row-count", "@type": "PropertyValue", "propertyID": "row-count",
+            "name": "Row count", "value": count, "unitText": "rows"
+        }));
+    }
     serde_json::to_string_pretty(&document).expect("the document is serializable") + "\n"
+}
+
+fn duration_property(seconds: f64) -> serde_json::Value {
+    json!({
+        "@id": "#retrieval-duration", "@type": "PropertyValue", "propertyID": "retrieval-duration",
+        "name": "Retrieval duration", "value": seconds, "unitCode": "SEC"
+    })
+}
+
+/// A retrieval initialized before the request, or finalized after a failure.
+pub struct Attempt<'a> {
+    pub endpoint: &'a str,
+    pub query: &'a str,
+    pub accept: Option<&'a str>,
+    pub started: DateTime<Utc>,
+    pub ended: Option<DateTime<Utc>>,
+    pub duration: Option<f64>,
+    pub error: Option<&'a str>,
+    pub response_status: Option<u16>,
+    pub final_url: &'a str,
+    pub partial: Option<(&'a str, Option<&'a str>)>,
+}
+
+/// Records an active or failed action without asserting a complete result.
+pub fn attempt_json(attempt: &Attempt<'_>) -> String {
+    use sha2::{Digest, Sha256};
+    let mut root = json!({
+        "@id": ROOT_ID, "@type": "Dataset", "name": "SPARQL retrieval",
+        "description": "SPARQL retrieval recorded by Vitrify.",
+        "datePublished": attempt.ended.unwrap_or(attempt.started).to_rfc3339(),
+        "license": LICENSE_NOTICE,
+        "publisher": {"@id": attempt.endpoint},
+        "hasPart": [{"@id": QUERY_FILE_NAME}]
+    });
+    if attempt.duration.is_some() {
+        root["additionalProperty"] = json!([{ "@id": "#retrieval-duration" }]);
+    }
+    let state = if attempt.error.is_some() {
+        "FailedActionStatus"
+    } else {
+        "ActiveActionStatus"
+    };
+    let mut action = json!({
+        "@id": "#retrieval", "@type": "CreateAction",
+        "actionStatus": {"@id": format!("http://schema.org/{state}")},
+        "startTime": attempt.started.to_rfc3339(),
+        "instrument": {"@id": "https://vitrify.iolanta.tech"},
+        "agent": {"@id": "https://vitrify.iolanta.tech"},
+        "object": [{"@id": attempt.endpoint}, {"@id": QUERY_FILE_NAME}],
+        "identifier": attempt.final_url,
+    });
+    let accept = attempt.accept.unwrap_or("omitted");
+    action["description"] = json!(match attempt.response_status {
+        Some(status) => format!("HTTP {status}; Accept: {accept}"),
+        None => format!("Accept: {accept}"),
+    });
+    if let Some(ended) = attempt.ended {
+        action["endTime"] = json!(ended.to_rfc3339());
+    }
+    let mut graph = vec![
+        json!({"@id": DESCRIPTOR_ID, "@type": "CreativeWork", "conformsTo": {"@id": PROFILE}, "about": {"@id": ROOT_ID}}),
+        json!({"@id": QUERY_FILE_NAME, "@type": "File", "encodingFormat": "application/sparql-query",
+            "contentSize": attempt.query.len().to_string(), "sha256": format!("{:x}", Sha256::digest(attempt.query.as_bytes()))}),
+        json!({"@id": attempt.endpoint, "@type": "Organization"}),
+        json!({"@id": "https://vitrify.iolanta.tech", "@type": "SoftwareApplication", "name": "Vitrify",
+            "url": "https://vitrify.iolanta.tech", "version": env!("CARGO_PKG_VERSION")}),
+    ];
+    if let Some(duration) = attempt.duration {
+        graph.push(duration_property(duration));
+    }
+    if let Some(error) = attempt.error {
+        action["error"] = json!({"@id": "#error"});
+        graph.push(json!({"@id": "#error", "@type": "Thing", "description": error}));
+    }
+    if let Some((name, media_type)) = attempt.partial {
+        root["hasPart"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({"@id": name}));
+        let mut partial = json!({"@id": name, "@type": "File", "description": "Incomplete response from a failed retrieval."});
+        if let Some(media_type) = media_type {
+            partial["encodingFormat"] = json!(media_type);
+        }
+        graph.push(partial);
+    }
+    graph.push(root);
+    graph.push(action);
+    serde_json::to_string_pretty(&json!({"@context": CONTEXT, "@graph": graph})).unwrap() + "\n"
 }
 
 #[cfg(test)]
@@ -142,6 +245,8 @@ mod tests {
             final_url: "https://query.wikidata.org/sparql".to_owned(),
             started: Utc.with_ymd_and_hms(2026, 9, 27, 12, 0, 0).unwrap(),
             ended: Utc.with_ymd_and_hms(2026, 9, 27, 12, 0, 1).unwrap(),
+            duration: 1.0,
+            row_count: None,
         }
     }
 
