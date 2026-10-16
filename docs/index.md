@@ -47,6 +47,8 @@ icon: material/home
 
 ## :material-magnify: Inspect the capture
 
+{{ history_chart('basic-example') }}
+
 {{ file_tabs('basic-example') }}
 
 [Full EU-capitals example](examples/eu-capitals.md){ .md-button }
