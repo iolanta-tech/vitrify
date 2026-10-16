@@ -1,0 +1,4 @@
+[flake8]
+select = WPS
+extend-exclude = .venv,.docs-tools,build,site,target
+jobs = 1

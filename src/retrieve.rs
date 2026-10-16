@@ -104,9 +104,6 @@ fn record_attempt(
         let (byte_size, sha256) = stream_body(response, &result_path)?;
         let ended = Utc::now();
         let duration = clock.elapsed().as_secs_f64();
-        let row_count = File::open(&result_path)
-            .ok()
-            .and_then(|file| crate::row_count::count(file).ok());
         let document = rocrate::metadata_json(&Retrieval {
             result_name: name,
             media_type: media_type.clone(),
@@ -121,7 +118,6 @@ fn record_attempt(
             started: exchange.started,
             ended,
             duration,
-            row_count,
         });
         Ok((document, result_path))
     })();
@@ -577,36 +573,28 @@ mod tests {
     }
 
     #[test]
-    fn count_measures_the_response_stream_independently_of_media_type() {
+    fn metadata_measures_response_bytes_independently_of_formatting() {
         let dir = unique_dir();
-        let mut exchange = exchange();
-        static TURTLE_FORMAT: Format = Format {
-            accept: "text/turtle",
-            extension: "ttl",
-        };
-        exchange.format = Some(&TURTLE_FORMAT);
-        write_crate(
-            response(
-                200,
-                Some("application/sparql-results+json"),
-                br#"{"head":{"vars":["s"]},"results":{"bindings":[{}]}}"#,
-            ),
-            &dir,
-            &exchange,
-        )
-        .unwrap();
-        assert_eq!(crate_entity(&dir, "#row-count")["value"], 1);
-        write_crate(
-            response(200, Some("application/sparql-results+json"), b"invalid"),
-            &dir,
-            &exchange,
-        )
-        .unwrap();
-        assert_eq!(crate_entity(&dir, "#row-count")["value"], 1);
-        assert_eq!(
-            crate_entity(&dir, "#retrieval")["actionStatus"]["@id"],
-            "http://schema.org/CompletedActionStatus"
-        );
+        for body in [
+            br#"{"results":{"bindings":[]}}"#.as_slice(),
+            b"{\n  \"results\": {\n    \"bindings\": []\n  }\n}\n".as_slice(),
+            "é\n".as_bytes(),
+            b"".as_slice(),
+        ] {
+            write_crate(
+                response(200, Some("application/sparql-results+json"), body),
+                &dir,
+                &exchange(),
+            )
+            .unwrap();
+            assert_eq!(
+                crate_entity(&dir, "results.json")["contentSize"],
+                body.len().to_string()
+            );
+            let metadata = std::fs::read_to_string(dir.join(METADATA_FILE_NAME)).unwrap();
+            assert!(!metadata.contains("row-count"));
+            assert_eq!(std::fs::read(dir.join("results.json")).unwrap(), body);
+        }
     }
 
     #[test]

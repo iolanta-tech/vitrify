@@ -28,13 +28,8 @@ retrieval. It links the result and query files and records their byte sizes and
 SHA-256 checksums, the result media type when provided, the endpoint, response
 status, final URL, requested `Accept` value when one was sent, and retrieval
 times. The retrieval action has a completed or failed status. Linked `PropertyValue`
-entities record retrieval duration in seconds and row count. Duration covers the
-request, redirects, and response download;
-it excludes row counting and final metadata writing.
-
-Row count is the number of LF (`\n`) bytes plus one in the saved response,
-regardless of media type. Headers and empty trailing rows are included; an empty
-response has a count of one. Counting reads the response in bounded chunks.
+entities record retrieval duration in seconds. Duration covers the
+request, redirects, and response download; it excludes final metadata writing.
 
 The result media type describes the received response and can differ
 from the requested format.
@@ -69,11 +64,11 @@ not be available.
 ## :material-chart-bar: Example history
 
 Each example has WDQS and QLever tabs, each with its own command, saved files,
-and response-line history.
+and response-size history.
 Select a bar to open that attempt's permanent page. The newest attempt is
 selected by default, including failures. Hover or focus a bar for its timestamp,
-outcome, row count, and duration. A hollow `?` marker indicates an unavailable
-count; bar height represents the text-stream row count. Duration appears beneath each
+outcome, byte count, and duration. A hollow `?` marker indicates an unavailable
+size; bar height represents the saved response size in bytes. Duration appears beneath each
 bar. Older captures use estimated durations derived from their recorded
 timestamps, marked with `≈`.
 

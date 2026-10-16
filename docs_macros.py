@@ -1,457 +1,83 @@
-"""Macros for rendering Vitrify's saved examples in MkDocs."""
+"""Register the saved-example renderers with MkDocs."""
 
-import csv
-import html
-import io
-from importlib.resources import files as resource_files
-import json
-import re
 import sys
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from textwrap import indent
-from urllib.parse import urlsplit
-
-from markdown.extensions.toc import slugify_unicode
-from mkdocs.utils import get_relative_url
 
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
-from example_history import captures, selected_capture
+
 from example_endpoints import ENDPOINTS, default_endpoint, retrieval_command
+from example_rendering.details import capture_detail as capture_detail
+from example_rendering.directories import directory_preview
+from example_rendering.files import file_tabs
+from example_rendering.history import history_chart
+from example_rendering.sources import source
+
+MACROS = (
+    "directory_preview",
+    "history_chart",
+    "retrieval_command",
+    "query_endpoint",
+    "file_tabs",
+    "source",
+)
+ATTEMPT = "history_attempt"
 
 
-ROOT_DIR = Path(__file__).parent.resolve()
-EXAMPLES_DIR = ROOT_DIR / "docs" / "examples"
-PREVIEW_ROWS = 5
-RO_CRATE_URL = "https://www.researchobject.org/ro-crate/"
+def _endpoint(environment, example):
+    return environment.page.meta.get("history_endpoint") or default_endpoint(example)
 
 
-def directory_preview(example, attempt=None, endpoint=None):
-    """Render only the generated crate contents as a directory tree."""
-    example_dir = _example_directory(example)
-    if not captures(example, endpoint):
-        return ""
-    crate_dir = selected_capture(example, attempt, endpoint).directory
-    crate_name = "eu-capitals" if example == "basic-example" else example
-    lines = [f":material-folder-open: `{crate_name}/`  "]
-    files = _crate_files(crate_dir)
-    for index, file_path in enumerate(files):
-        media_type = _file_media_type(crate_dir, file_path.name)
-        icon = _file_icon(file_path.name, media_type)
-        branch = "└──" if index == len(files) - 1 else "├──"
-        lines.append(
-            f"{branch} :{icon}: [`{file_path.name}`](#{_anchor_id(file_path.name)})  "
+class ExampleMacros:
+    """Bind renderers to the current MkDocs page and configuration."""
+
+    def __init__(self, environment):
+        self.environment = environment
+
+    def directory_preview(self, example):
+        return directory_preview(
+            example,
+            self.environment.page.meta.get(ATTEMPT),
+            _endpoint(self.environment, example),
         )
-    return "\n".join(lines)
 
-
-def file_tabs(example, repo_url, attempt=None, page_url="", endpoint=None):
-    """Render the crate files as filename tabs with GitHub source links."""
-    if not captures(example, endpoint):
-        return ""
-    capture = selected_capture(example, attempt, endpoint)
-    crate_dir = capture.directory
-    files = _crate_files(crate_dir)
-    anchors = [
-        f'<span id="{_anchor_id(file_path.name)}" '
-        f'data-tab-target="{_tab_input_id(file_path.name)}"></span>'
-        for file_path in files
-    ]
-    tabs = []
-    for file_path in files:
-        name = file_path.name
-        repository_path = file_path.relative_to(ROOT_DIR).as_posix()
-        github_url = f"{repo_url.rstrip('/')}/blob/main/{repository_path}"
-        tabs.append(
-            f'=== "{name}"\n\n'
+    def history_chart(self, example):
+        return history_chart(
+            example,
+            self.environment.page.meta.get(ATTEMPT),
+            self.environment.page.url,
+            _endpoint(self.environment, example),
         )
-        content = file_path.read_text(errors="replace")
-        if name == "query.rq":
-            tabs.append(_code_block(content, "sparql"))
-        elif name == "ro-crate-metadata.json":
-            tabs.append(_code_block(content, "json"))
-        else:
-            media_type = _file_media_type(crate_dir, name)
-            try:
-                if capture.status != "Success":
-                    tabs.append(_code_block(content, "text"))
-                elif media_type == "text/csv":
-                    tabs.append(_indented_table(_csv_table(content)))
-                elif media_type == "application/sparql-results+json":
-                    rows, headers = _sparql_json(content)
-                    tabs.append(_table_preview(rows, headers, PREVIEW_ROWS))
-                elif media_type == "application/sparql-results+xml":
-                    rows, headers = _sparql_xml(content)
-                    tabs.append(_table_preview(rows, headers, PREVIEW_ROWS))
-                else:
-                    tabs.append(_code_block(content, _syntax_for(file_path)))
-            except (ValueError, KeyError, TypeError, ET.ParseError):
-                tabs.append(_code_block(content, "text"))
-        download = get_relative_url(file_path.relative_to(ROOT_DIR / "docs").as_posix(), page_url)
-        tabs.append(f'\n    [Download `{name}`]({download}){{ .md-button }}\n')
-        tabs.append(
-            f'\n    [:fontawesome-brands-github: `{name}`]({github_url})'
-            f'{{ .md-button .github-file-link }}\n'
+
+    def retrieval_command(self, example):
+        return retrieval_command(example, _endpoint(self.environment, example))
+
+    def query_endpoint(self):
+        return ENDPOINTS[_endpoint(self.environment, "basic-example")][1]
+
+    def file_tabs(self, example):
+        return file_tabs(
+            example,
+            self.environment.conf["repo_url"],
+            self.environment.page.meta.get(ATTEMPT),
+            self.environment.page.file.src_uri,
+            _endpoint(self.environment, example),
         )
-        tabs.append("\n")
-    notice = ""
-    if capture.status != "Success":
-        message = capture.error or "This retrieval did not finish. Its output may be incomplete."
-        notice = f'!!! failure "{capture.status}"\n\n' + indent(html.escape(message), "    ") + "\n\n"
-    return notice + "\n\n".join(anchors) + "\n\n" + "\n".join(tabs)
 
-
-def capture_detail(capture):
-    parts = [capture.started.strftime("%d %b %Y, %H:%M:%S UTC"), capture.status]
-    if capture.row_count is not None:
-        unit = "line" if capture.row_count == 1 else "lines"
-        parts.append(f"{capture.row_count:,} {unit}")
-    else:
-        parts.append("Row count unavailable")
-    if capture.duration is not None:
-        prefix = "Estimated duration" if capture.estimated_duration else "Retrieval duration"
-        duration = "<0.01" if 0 < capture.duration < 0.01 else f"{capture.duration:.2f}"
-        parts.append(f"{prefix}: {duration} s")
-    else:
-        parts.append("Duration unavailable")
-    return " · ".join(parts)
-
-
-def history_chart(example, attempt=None, page_url="", endpoint=None):
-    """Render fixed-height navigation to every saved retrieval."""
-    endpoint = endpoint or default_endpoint(example)
-    saved = captures(example, endpoint)
-    page_name = "eu-capitals" if example == "basic-example" else example
-    if page_url.startswith("examples/query-from-file/"):
-        page_name = "query-from-file"
-    endpoint_tabs = '<nav class="example-endpoints" aria-label="Query endpoint">' + "".join(
-        f'<a href="{get_relative_url(f"examples/{page_name}/{key}/", page_url)}"'
-        + (' aria-current="page"' if key == endpoint else '')
-        + f'>{label}</a>' for key, (label, _) in ENDPOINTS.items()
-    ) + '</nav>'
-    if not saved:
-        return endpoint_tabs + '<p>No saved retrievals for this endpoint yet.</p>'
-    selected = selected_capture(example, attempt, endpoint)
-    maximum = max((capture.row_count or 0 for capture in saved), default=0)
-    links = []
-    for capture in saved:
-        selected_attribute = ' aria-current="page"' if capture.identifier == selected.identifier else ""
-        detail = html.escape(capture_detail(capture), quote=True)
-        height = max(3, 80 * capture.row_count / maximum) if maximum and capture.row_count is not None else 3
-        destination = get_relative_url(f"examples/{page_name}/{endpoint}/{capture.identifier}/", page_url)
-        unknown = " history-unknown" if capture.row_count is None else ""
-        if capture.row_count is None:
-            graphic = (
-                '<span class="history-unknown-marker" aria-hidden="true">'
-                '<span class="history-question">?</span></span>'
-            )
-        else:
-            graphic = (
-                f'<span class="history-bar" style="height:{height:.2f}px">'
-                '</span>'
-            )
-        if capture.duration is None:
-            duration_label = "Unknown time"
-        else:
-            duration = "<0.01" if 0 < capture.duration < 0.01 else f"{capture.duration:.2f}"
-            duration_label = ("≈ " if capture.estimated_duration else "") + f"{duration} s"
-        links.append(
-            f'<a class="history-attempt history-{capture.status.lower()}{unknown}" href="{destination}"'
-            f' aria-label="{detail}" title="{detail}" data-history-detail="{detail}"{selected_attribute}>'
-            f'<span class="history-column">{graphic}</span>'
-            f'<span class="history-duration">{html.escape(duration_label)}</span>'
-            f'<span class="history-date">{capture.started.strftime("%d %b")}</span></a>'
+    def source(self, path, title="Source", collapsed=False):
+        return source(
+            path, self.environment.conf["repo_url"], title=title, collapsed=collapsed
         )
-    timestamp = selected.started.strftime("%d %b %Y, %H:%M:%S UTC")
-    if selected.duration is None:
-        duration = "Unknown"
-    else:
-        value = "<0.01" if 0 < selected.duration < 0.01 else f"{selected.duration:.2f}"
-        duration = ("≈ " if selected.estimated_duration else "") + f"{value} s"
-    def icon(name):
-        svg = resource_files("material").joinpath(f"templates/.icons/material/{name}.svg").read_text()
-        return f'<span class="history-icon" aria-hidden="true">{svg}</span>'
-
-    status_icon = {"Success": "check-circle", "Failure": "close-circle", "Incomplete": "progress-clock"}[selected.status]
-    duration_title = "Estimated retrieval duration" if selected.estimated_duration else "Retrieval duration"
-    fields = [
-        f'<span>{icon("calendar")}<time datetime="{selected.started.isoformat()}">{timestamp}</time></span>',
-        f'<span class="history-outcome history-outcome-{selected.status.lower()}">{icon(status_icon)}{selected.status}</span>',
-        f'<span title="{duration_title}">{icon("timer-outline")}{html.escape(duration)}'
-        + ("" if selected.duration is not None else " duration") + '</span>',
-    ]
-    if selected.byte_size is not None:
-        unit = "byte" if selected.byte_size == 1 else "bytes"
-        fields.append(f'<span>{selected.byte_size:,} {unit}</span>')
-    separator = '<span class="history-separator" aria-hidden="true">·</span>'
-    information = '<p class="history-detail" aria-label="Selected retrieval">' + separator.join(fields) + '</p>'
-    return (
-        endpoint_tabs + information
-        + '<section class="example-history" aria-label="Retrieval history">'
-        '<div class="history-heading"><span>Response lines</span>'
-        '<span class="history-controls"><button type="button" data-history-scroll="-1" aria-label="Earlier retrievals">←</button>'
-        '<button type="button" data-history-scroll="1" aria-label="Later retrievals">→</button></span></div>'
-        '<nav class="history-chart" aria-label="Saved retrievals">' + "".join(links) + '</nav>'
-        + '</section>'
-    )
 
 
-
-def source(path, repo_url, title="Source", collapsed=False):
-    """Render a project file in a code block linked to its GitHub source."""
-    source_path = (ROOT_DIR / path).resolve()
-    if not source_path.is_relative_to(ROOT_DIR):
-        raise ValueError(f"Invalid source path: {path}")
-    if not source_path.is_file():
-        raise ValueError(f"Documentation source does not exist: {path}")
-
-    if title.startswith("RO-Crate"):
-        title = f"[RO-Crate]({RO_CRATE_URL}){title.removeprefix('RO-Crate')}"
-
-    repository_path = Path(path).as_posix()
-    github_url = f"{repo_url.rstrip('/')}/blob/main/{repository_path}"
-    syntax = {".json": "json", ".rq": "sparql", ".sh": "bash"}.get(
-        source_path.suffix.lower(),
-        "text",
-    )
-    contents = source_path.read_text().rstrip("\n")
-    heading = (
-        f'{title}<span class="example-source-link" markdown>'
-        f':fontawesome-brands-github: [`{source_path.name}`]({github_url})'
-        "</span>"
-    )
-    code = f"```{syntax}\n{contents}\n```"
-    marker = "???" if collapsed else "!!!"
-    return f'{marker} example "{heading}"\n\n{indent(code, "    ")}\n'
+def _add_indentation(text, spaces=0):
+    indented = indent(text, " " * spaces)
+    return f"\n{indented}\n"
 
 
 def define_env(env):
     """Register documentation macros with mkdocs-macros-plugin."""
-    def attempt():
-        return env.page.meta.get("history_attempt")
-
-    def endpoint(example):
-        return env.page.meta.get("history_endpoint") or default_endpoint(example)
-
-    env.macro(lambda example: directory_preview(example, attempt(), endpoint(example)), "directory_preview")
-    env.macro(lambda example: history_chart(example, attempt(), env.page.url, endpoint(example)), "history_chart")
-    env.macro(lambda example: retrieval_command(example, endpoint(example)), "retrieval_command")
-    env.macro(lambda: ENDPOINTS[endpoint("basic-example")][1], "query_endpoint")
-    env.filter(
-        lambda text, spaces=0: "\n" + indent(text, " " * spaces) + "\n",
-        "add_indentation",
-    )
-    env.macro(
-        lambda example: file_tabs(
-            example,
-            env.conf["repo_url"],
-            attempt(), env.page.file.src_uri, endpoint(example),
-        ),
-        "file_tabs",
-    )
-    env.macro(
-        lambda path, title="Source", collapsed=False: source(
-            path,
-            env.conf["repo_url"],
-            title=title,
-            collapsed=collapsed,
-        ),
-        "source",
-    )
-
-
-def _example_directory(example):
-    example_dir = (EXAMPLES_DIR / example).resolve()
-    if not example_dir.is_relative_to(EXAMPLES_DIR):
-        raise ValueError(f"Invalid example directory: {example}")
-    if not example_dir.is_dir():
-        raise ValueError(f"Example directory does not exist: {example}")
-    return example_dir
-
-
-def _result_entity(example_dir):
-    metadata = json.loads((example_dir / "ro-crate-metadata.json").read_text())
-    return next(
-        entity
-        for entity in metadata["@graph"]
-        if entity.get("@type") == "File"
-        and entity.get("@id", "").startswith("results.")
-    )
-
-
-def _crate_files(crate_dir):
-    graph = json.loads((crate_dir / "ro-crate-metadata.json").read_text())["@graph"]
-    action = next(entity for entity in graph if entity.get("@id") == "#retrieval")
-    result_name = action.get("result", {}).get("@id")
-    names = ([result_name] if result_name else []) + ["ro-crate-metadata.json", "query.rq"]
-    names.extend(entity["@id"] for entity in graph if entity.get("@type") == "File" and entity.get("@id", "").startswith("results.") and entity["@id"] not in names)
-    return tuple(crate_dir / name for name in names if (crate_dir / name).is_file())
-
-
-def _file_media_type(crate_dir, file_name):
-    if file_name == "ro-crate-metadata.json":
-        return "application/ld+json"
-    entity = next(
-        entity
-        for entity in json.loads(
-            (crate_dir / "ro-crate-metadata.json").read_text()
-        )["@graph"]
-        if entity.get("@type") == "File" and entity.get("@id") == file_name
-    )
-    return entity.get("encodingFormat", "")
-
-
-def _file_icon(file_name, media_type):
-    if file_name == "query.rq":
-        return "material-file-document-outline"
-    if file_name == "ro-crate-metadata.json":
-        return "material-code-json"
-    if media_type == "text/csv":
-        return "material-table"
-    if "json" in media_type:
-        return "material-code-json"
-    if media_type == "text/turtle":
-        return "material-code-braces"
-    return "material-file-document-outline"
-
-
-def _anchor_id(file_name):
-    return slugify_unicode(f"file-{file_name}", "-")
-
-
-def _tab_input_id(file_name):
-    return slugify_unicode(file_name, "-")
-
-
-def _syntax_for(path):
-    return {
-        ".json": "json",
-        ".rq": "sparql",
-        ".ttl": "turtle",
-        ".xml": "xml",
-    }.get(path.suffix.lower(), "text")
-
-
-def _code_block(content, syntax):
-    code = indent(content.rstrip("\n"), "    ")
-    return f"    ```{syntax}\n{code}\n    ```\n"
-
-
-def _table_preview(rows, headers, limit=None):
-    preview = rows if limit is None else rows[:limit]
-    lines = []
-    if len(preview) < len(rows):
-        lines.extend((f"Showing {len(preview)} of {len(rows)} rows.", ""))
-    lines.extend(
-        (
-            "| " + " | ".join(_cell(header) for header in headers) + " |",
-            "| " + " | ".join("---" for _ in headers) + " |",
-        )
-    )
-    lines.extend(
-        "| " + " | ".join(_cell(value) for value in row) + " |"
-        for row in preview
-    )
-    return "    " + "\n    ".join(lines) + "\n"
-
-
-def _indented_table(table):
-    return indent(table.rstrip("\n"), "    ") + "\n"
-
-
-def _csv_table(content):
-    """Render CSV headers and rows as an escaped HTML table."""
-    rows = csv.reader(io.StringIO(content, newline=""))
-    headers = next(rows, None)
-    if headers is None:
-        return ""
-
-    def row(values, tag):
-        cells = "".join(f"<{tag}>{_csv_cell(value)}</{tag}>" for value in values)
-        return f"<tr>{cells}</tr>"
-
-    return (
-        "<table>\n<thead>" + row(headers, "th") + "</thead>\n<tbody>\n"
-        + "\n".join(row(values, "td") for values in rows)
-        + "\n</tbody>\n</table>"
-    )
-
-
-def _csv_cell(value):
-    """Escape cell text and link HTTP(S) URLs with HTTPS destinations."""
-    pieces = []
-    position = 0
-    for match in re.finditer(r"https?://[^\s<>\"']+", value):
-        url = match.group().rstrip(".,;!")
-        for opening, closing in (("(", ")"), ("[", "]"), ("{", "}")):
-            while url.endswith(closing) and url.count(closing) > url.count(opening):
-                url = url[:-1]
-        pieces.append(html.escape(value[position:match.start()]))
-        escaped = html.escape(url)
-        try:
-            hostname = urlsplit(url).hostname
-        except ValueError:
-            hostname = None
-        if hostname:
-            destination = html.escape("https://" + url.split("://", 1)[1])
-            pieces.append(
-                f'<a href="{destination}" target="_blank" '
-                f'rel="noopener noreferrer">{escaped}</a>'
-            )
-        else:
-            pieces.append(escaped)
-        position = match.start() + len(url)
-    pieces.append(html.escape(value[position:]))
-    return "".join(pieces).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
-
-
-def _crate_directory(example_dir):
-    """Find the example's RO-Crate, whether nested or at its root."""
-    if (example_dir / "ro-crate-metadata.json").is_file():
-        return example_dir
-
-    crate_directories = [
-        path
-        for path in example_dir.iterdir()
-        if path.is_dir() and (path / "ro-crate-metadata.json").is_file()
-    ]
-    if len(crate_directories) == 1:
-        return crate_directories[0]
-    raise ValueError(f"Expected exactly one RO-Crate in {example_dir}")
-
-
-def _sparql_json(content):
-    document = json.loads(content)
-    headers = document["head"]["vars"]
-    bindings = document["results"]["bindings"]
-    rows = [
-        [binding.get(header, {}).get("value", "") for header in headers]
-        for binding in bindings
-    ]
-    return rows, headers
-
-
-def _sparql_xml(content):
-    namespace = "{http://www.w3.org/2005/sparql-results#}"
-    document = ET.fromstring(content)
-    headers = [
-        variable.attrib["name"]
-        for variable in document.findall(f"{namespace}head/{namespace}variable")
-    ]
-    rows = []
-    for result in document.findall(f"{namespace}results/{namespace}result"):
-        bindings = {
-            binding.attrib["name"]: next(iter(binding), None)
-            for binding in result.findall(f"{namespace}binding")
-        }
-        rows.append(
-            [
-                bindings[name].text or "" if bindings.get(name) is not None else ""
-                for name in headers
-            ]
-        )
-    return rows, headers
-
-
-def _cell(value):
-    return html.escape(str(value)).replace("|", "&#124;").replace("\n", " ")
+    bound = ExampleMacros(env)
+    for name in MACROS:
+        env.macro(getattr(bound, name), name)
+    env.filter(_add_indentation, "add_indentation")

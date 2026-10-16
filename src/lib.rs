@@ -6,7 +6,6 @@
 mod error;
 mod retrieve;
 mod rocrate;
-mod row_count;
 mod sparql;
 
 use std::fs;

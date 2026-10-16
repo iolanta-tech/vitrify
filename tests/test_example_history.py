@@ -1,133 +1,139 @@
-"""Regression checks for immutable example capture and history discovery."""
+"""Regression checks for immutable capture history and measurements."""
 
-import contextlib
-import io
-import json
-import shutil
-import os
-import shlex
-import tempfile
-import unittest
-from pathlib import Path
+from dataclasses import replace
 from unittest.mock import patch
 
 import example_endpoints
 import example_history
-import jeeves
+from example_rendering import details, history
+
+from history_fixtures import (
+    HistoryFixture,
+    RESULT_FILE,
+    PRIMARY,
+    IDENTIFIER,
+    RETRIEVAL,
+    WDQS,
+    QLEVER,
+)
 
 
-class HistoryTests(unittest.TestCase):
-    def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="vitrify-history-test-")
-        self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
-        self.fixture = example_history.EXAMPLES_DIR / "female-persons"
-        self.baseline_files = ("query.rq", "results.csv", "ro-crate-metadata.json")
-        for name in ("first", "second"):
-            directory = self.root / name
-            directory.mkdir()
-            for filename in self.baseline_files:
-                shutil.copyfile(self.fixture / filename, directory / filename)
-
-    def test_latest_failure_keeps_baseline_and_earlier_pages_available(self):
-        baseline = self.root / "first"
-        before = {name: (baseline / name).read_bytes() for name in self.baseline_files}
-        directory = baseline / "2026-10-15T120000Z"
-        directory.mkdir()
-        graph = json.loads(before["ro-crate-metadata.json"])["@graph"]
-        action = next(entity for entity in graph if entity["@id"] == "#retrieval")
-        action.update({"startTime": "2026-10-15T12:00:00Z", "endTime": "2026-10-15T12:00:05Z", "actionStatus": {"@id": "http://schema.org/FailedActionStatus"}, "error": {"@id": "#error"}})
-        action.pop("result")
-        graph.append({"@id": "#error", "@type": "Thing", "description": "HTTP 503"})
-        (directory / "ro-crate-metadata.json").write_text(json.dumps({"@graph": graph}))
+class HistoryTests(HistoryFixture):
+    def test_failure_preserves_history(self):
+        before = self.baseline_bytes()
+        self.failed_capture()
         with patch.object(example_history, "EXAMPLES_DIR", self.root):
-            captures = example_history.captures("first")
-            latest = example_history.selected_capture("first")
+            captures = example_history.captures(PRIMARY)
+            latest = example_history.selected_capture(PRIMARY)
             self.assertEqual(len(captures), 2)
-            self.assertEqual(captures[0].row_count, before["results.csv"].count(b"\n") + 1)
-            self.assertEqual(latest.status, "Failure")
-            self.assertEqual(latest.error, "HTTP 503")
-            self.assertIsNone(latest.row_count)
-            self.assertEqual(example_history.selected_capture("first", captures[0].identifier), captures[0])
-        self.assertEqual(before, {name: (baseline / name).read_bytes() for name in self.baseline_files})
+            self.assertEqual(captures[0].byte_size, len(before[RESULT_FILE]))
+            self._assert_failure(latest)
+            self.assertEqual(
+                example_history.selected_capture(PRIMARY, captures[0].identifier),
+                captures[0],
+            )
+        self.assertEqual(before, self.baseline_bytes())
 
-    def test_flattened_metrics_and_new_unknown_counts(self):
-        directory = self.root / "first"
-        document = json.loads((directory / "ro-crate-metadata.json").read_text())
-        entities = {entity["@id"]: entity for entity in document["@graph"]}
-        entities["https://vitrify.iolanta.tech"]["version"] = "0.1.1"
-        entities["#retrieval"]["actionStatus"] = {"@id": "http://schema.org/CompletedActionStatus"}
-        entities["./"]["additionalProperty"] = [{"@id": "#retrieval-duration"}]
-        entities["results.csv"]["additionalProperty"] = [{"@id": "#row-count"}]
-        document["@graph"].extend([
-            {"@id": "#retrieval-duration", "@type": "PropertyValue", "propertyID": "retrieval-duration", "value": 0.5},
-            {"@id": "#row-count", "@type": "PropertyValue", "propertyID": "row-count", "value": 1},
-        ])
-        metadata = directory / "ro-crate-metadata.json"
-        metadata.write_text(json.dumps(document))
-        capture = example_history.read_capture(directory)
+    def test_byte_sizes_and_flattened_duration(self):
+        entities = self.entities()
+        entities[RETRIEVAL]["actionStatus"] = {
+            IDENTIFIER: "http://schema.org/CompletedActionStatus"
+        }
+        entities["./"]["additionalProperty"] = [{IDENTIFIER: "#retrieval-duration"}]
+        entities["#retrieval-duration"] = {
+            IDENTIFIER: "#retrieval-duration",
+            "@type": "PropertyValue",
+            "propertyID": "retrieval-duration",
+            "value": 0.5,
+        }
+        sizes = (
+            ("1234", 1234),
+            (0, 0),
+            ("1", 1),
+            (None, None),
+            ("invalid", None),
+            (-1, None),
+            (True, None),
+        )
+        for size, expected in sizes:
+            with self.subTest(size=size):
+                entities[RESULT_FILE]["contentSize"] = size
+                self.save(entities)
+                self._assert_measurements(
+                    example_history.read_capture(self.directory()), expected
+                )
+
+    def test_history_bytes_and_unknown_sizes(self):
+        capture = example_history.read_capture(self.directory())
+        saved = [
+            replace(capture, identifier=str(index), byte_size=size)
+            for index, size in enumerate((100, 50, 0, None))
+        ]
+        with (
+            patch.object(history, "captures", return_value=saved),
+            patch.object(history, "selected_capture", return_value=saved[0]),
+        ):
+            chart = history.history_chart("female-persons")
+        self.assertIn("Response bytes", chart)
+        self.assertIn("height:80.00px", chart)
+        self.assertIn("height:40.00px", chart)
+        self.assertIn("0 bytes", chart)
+        self.assertEqual(chart.count('class="history-question"'), 1)
+        self.assertNotIn("lines", chart)
+
+    def _assert_failure(self, capture):
+        self.assertEqual(capture.status, "Failure")
+        self.assertEqual(capture.error, "HTTP 503")
+        self.assertIsNone(capture.byte_size)
+
+    def _assert_measurements(self, capture, expected):
         self.assertEqual(capture.duration, 0.5)
         self.assertFalse(capture.estimated_duration)
-        self.assertEqual(capture.row_count, 1)
-        entities["results.csv"].pop("additionalProperty")
-        metadata.write_text(json.dumps(document))
-        self.assertIsNone(example_history.read_capture(directory).row_count)
+        self.assertEqual(capture.byte_size, expected)
+        if expected is None:
+            self.assertIn("Byte count unavailable", details.capture_detail(capture))
+        else:
+            unit = "byte" if expected == 1 else "bytes"
+            self.assertIn(f"{expected:,} {unit}", details.capture_detail(capture))
 
-    def test_endpoint_histories_are_disjoint_and_never_fall_back(self):
-        directory = self.root / "first"
+
+class EndpointHistoryTests(HistoryFixture):
+    def test_disjoint_endpoint_histories(self):
         with patch.object(example_history, "EXAMPLES_DIR", self.root):
-            self.assertEqual(len(example_history.captures("first", "qlever")), 1)
-            self.assertEqual(example_history.captures("first", "wdqs"), [])
+            self._assert_endpoint_counts(1, 0)
             with self.assertRaises(ValueError):
-                example_history.selected_capture("first", endpoint="wdqs")
-            newer = directory / "2026-10-16T120000Z"
-            shutil.copytree(directory, newer, ignore=shutil.ignore_patterns("2026-*"))
-            metadata = newer / "ro-crate-metadata.json"
-            document = json.loads(metadata.read_text())
-            entities = {entity["@id"]: entity for entity in document["@graph"]}
-            entities["./"]["publisher"]["@id"] = example_endpoints.ENDPOINTS["wdqs"][1]
-            entities["#retrieval"]["startTime"] = "2026-10-16T12:00:00Z"
-            metadata.write_text(json.dumps(document))
-            self.assertEqual(len(example_history.captures("first", "wdqs")), 1)
-            self.assertEqual(len(example_history.captures("first", "qlever")), 1)
-            self.assertEqual(example_history.selected_capture("first", endpoint="wdqs").directory, newer)
-            entities["./"].pop("publisher")
-            metadata.write_text(json.dumps(document))
-            self.assertEqual(example_history.captures("first", "wdqs"), [])
+                example_history.selected_capture(PRIMARY, endpoint=WDQS)
+            newer = self.newer_capture(example_endpoints.ENDPOINTS[WDQS][1])
+            self._assert_endpoint_counts(1, 1)
+            self.assertEqual(
+                example_history.selected_capture(PRIMARY, endpoint=WDQS).directory,
+                newer,
+            )
+            self._remove_publisher(newer)
+            self.assertEqual(example_history.captures(PRIMARY, WDQS), [])
 
     def test_commands_only_change_the_endpoint(self):
         for example in set(example_history.PAGE_EXAMPLES.values()):
-            commands = [example_endpoints.retrieval_command(example, endpoint).replace(url, "ENDPOINT")
-                        for endpoint, (_, url) in example_endpoints.ENDPOINTS.items()]
+            commands = self._commands(example)
             self.assertEqual(commands[0], commands[1])
             self.assertIn("--format ", commands[0])
-        command = example_endpoints.retrieval_command("basic-example", "qlever")
+        command = example_endpoints.retrieval_command("basic-example", QLEVER)
         for prefix in ("wd:", "wdt:", "rdfs:"):
-            self.assertIn("PREFIX " + prefix, command)
+            self.assertIn(f"PREFIX {prefix}", command)
 
-    def test_runner_appends_and_continues_after_retrieval_failure(self):
-        validator = self.root / "bin" / "rocrate-validator"
-        validator.parent.mkdir()
-        validator.write_text("#!/bin/sh\nexit 0\n")
-        validator.chmod(0o755)
-        for name in ("first", "second"):
-            commands = ["# --endpoint https://query.wikidata.org/sparql", f"mkdir {name}"]
-            commands.extend(f"cp {shlex.quote(str(self.fixture / filename))} {name}/" for filename in self.baseline_files)
-            commands.append("exit 1" if name == "first" else "exit 0")
-            (self.root / name / "retrieve.sh").write_text("\n".join(commands) + "\n")
-        before = (self.root / "first" / "results.csv").read_bytes()
-        environment = {"PATH": str(validator.parent) + os.pathsep + os.environ["PATH"]}
-        with patch.object(jeeves, "EXAMPLES_DIR", self.root), patch.object(jeeves, "EXAMPLES", (("first", "retrieve.sh", "."), ("second", "retrieve.sh", "."))), patch.dict(os.environ, environment), contextlib.redirect_stdout(io.StringIO()):
-            for _ in range(2):
-                with self.assertRaises(SystemExit):
-                    jeeves.examples()
-        for name in ("first", "second"):
-            attempts = [child for child in (self.root / name).iterdir() if child.is_dir()]
-            self.assertEqual(len(attempts), 4)
-            for attempt in attempts:
-                self.assertEqual({file.name for file in attempt.iterdir()}, set(self.baseline_files))
-        self.assertEqual((self.root / "first" / "results.csv").read_bytes(), before)
+    def _assert_endpoint_counts(self, qlever, wdqs):
+        self.assertEqual(len(example_history.captures(PRIMARY, QLEVER)), qlever)
+        self.assertEqual(len(example_history.captures(PRIMARY, WDQS)), wdqs)
 
+    def _remove_publisher(self, directory):
+        entities = self.entities(directory)
+        entities["./"].pop("publisher")
+        self.save(entities, directory)
 
-if __name__ == "__main__":
-    unittest.main()
+    def _commands(self, example):
+        return [
+            example_endpoints.retrieval_command(example, endpoint).replace(
+                url, "ENDPOINT"
+            )
+            for endpoint, (_, url) in example_endpoints.ENDPOINTS.items()
+        ]
