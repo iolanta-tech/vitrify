@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-code-json: SELECT response returned as JSON
 
+{{ history_chart('select-turtle') }}
+
 This example asks QLever for Turtle while running a `SELECT` query. The
 endpoint returns SPARQL Results JSON, and Vitrify records that actual response
 type even though the requested format determines the `results.ttl` filename.
