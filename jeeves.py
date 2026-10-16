@@ -1,6 +1,10 @@
 """Project tasks for Vitrify. Run with `j <task>` (see https://jeeves.sh)."""
 
 import sys
+import os
+import shutil
+import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import rich
@@ -22,23 +26,50 @@ EXAMPLES = (
 
 
 def examples() -> None:
-    """Run the displayed retrieval scripts and validate every example crate."""
+    """Append one saved retrieval per example and validate its RO-Crate."""
+    failed = False
     for name, script_path, crate_path in EXAMPLES:
         directory = EXAMPLES_DIR / name
         rich.print(f"[b]{name}[/b]: running retrieval script…")
-        sh.Command("sh")(
-            str(directory / script_path),
-            _cwd=str(directory if script_path.startswith("input/") else EXAMPLES_DIR),
-            _err=sys.stderr,
-        )
+        # Resolve the binary before changing directories; prefer this checkout's build.
+        local_binary = PROJECT_DIR / "target" / "debug" / "vitrify"
+        environment = os.environ.copy()
+        if local_binary.is_file():
+            environment["PATH"] = str(local_binary.parent) + os.pathsep + environment.get("PATH", "")
+        with tempfile.TemporaryDirectory(prefix="vitrify-example-") as temporary:
+            working_directory = Path(temporary)
+            output = working_directory / (crate_path if crate_path != "." else name)
+            completed = sh.Command("sh")(
+                str(directory / script_path),
+                _cwd=str(working_directory), _env=environment,
+                _out=sys.stdout, _err=sys.stderr, _ok_code=range(-128, 256), _return_cmd=True,
+            )
+            failed |= completed.exit_code != 0
+            if not (output / "ro-crate-metadata.json").is_file():
+                rich.print(f"[red]{name}: no retrieval metadata was saved[/red]")
+                failed = True
+                continue
+            while True:
+                identifier = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%S%fZ")
+                destination = directory / identifier
+                try:
+                    destination.mkdir()
+                    break
+                except FileExistsError:
+                    continue
+            # Only Vitrify's generated output survives the temporary working directory.
+            with tempfile.TemporaryDirectory(prefix=".pending-", dir=directory) as staging:
+                shutil.copytree(output, staging, dirs_exist_ok=True)
+                os.replace(staging, destination)
         rich.print(f"[b]{name}[/b]: validating {PROFILE}…")
-        sh.Command("rocrate-validator").validate(
-            "-p", PROFILE,
-            str(directory / crate_path),
-            _out=sys.stdout,
-            _err=sys.stderr,
+        validation = sh.Command("rocrate-validator")(
+            "validate", "-p", PROFILE, str(destination),
+            _out=sys.stdout, _err=sys.stderr, _ok_code=range(-128, 256), _return_cmd=True,
         )
-        rich.print(f"[green]✓[/green] {name}: regenerated")
+        failed |= validation.exit_code != 0
+        rich.print(f"[b]{name}[/b]: saved {identifier}")
+    if failed:
+        raise SystemExit(1)
 
 
 def serve() -> None:
