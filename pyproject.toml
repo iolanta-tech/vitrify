@@ -15,8 +15,15 @@ dependencies = [
     "mkdocs-macros-plugin>=1.5.0",
     "pymdown-extensions>=10.0",
     "roc-validator",
+    "ruff>=0.17.1,<0.18",
     "sh>=2.0",
+    "wemake-python-styleguide>=1.8.1,<2",
 ]
 
 [tool.setuptools]
 packages = []
+
+[tool.ruff]
+target-version = "py312"
+include = ["*.py", "*.pyi"]
+extend-exclude = [".docs-tools", "build", "site", "target", "docs/examples"]
