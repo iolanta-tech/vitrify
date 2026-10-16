@@ -4,6 +4,9 @@
 
 This project is managed with [Jeeves](https://jeeves.sh). Run `j <task>` and
 consult `jeeves.py` before adding, changing, or invoking project tasks.
+Expose project commands through Jeeves rather than standalone scripts.
+Prefer deterministic checks enforced by `j lint` and CI over prompting agents
+with rules that can be checked automatically.
 
 For CLI commands, arguments, and output behavior, start with
 `docs/cli.md` and `docs/outputs/ro-crate/index.md`.
@@ -12,6 +15,9 @@ For CLI commands, arguments, and output behavior, start with
 
 - `.envrc` activates the project-local `.venv`; run `direnv allow .` after
   setting up the checkout or changing that file.
+- `j lint` checks Python task entry points, runs Python tests, and protects existing
+  snapshots against local changes. Use `--base REVISION --head REVISION` to
+  compare committed revisions, as CI does.
 - `j serve` starts the documentation site at `http://localhost:6453`.
 - `j examples` reruns every displayed retrieval script and validates the
   resulting crates against the RO-Crate 1.2 profile. It contacts the example
