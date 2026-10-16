@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vitrify-site"
-version = "0.1.0"
+version = "0.1.1"
 description = "Documentation site and development commands for Vitrify."
 readme = "docs/index.md"
 requires-python = ">=3.12"
