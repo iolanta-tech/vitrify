@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-layers-triple: Metaclasses of metaclasses
 
+{{ history_chart('metaclasses-of-metaclasses') }}
+
 With Vitrify installed, run this command in the directory where you want to
 save `metaclasses-of-metaclasses/`:
 
