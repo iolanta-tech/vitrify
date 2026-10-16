@@ -4,6 +4,8 @@ hide: [toc]
 
 # :material-trophy: Female Nobel laureates
 
+{{ history_chart('female-persons') }}
+
 This query returns five female Nobel laureates from QLever's Wikidata dataset
 across all prize categories, including Economic Sciences, with laureate labels,
 prize labels, and prize years, ordered from newest to oldest.
