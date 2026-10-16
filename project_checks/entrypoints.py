@@ -10,6 +10,7 @@ PROJECT_DIR = Path(__file__).resolve().parents[1]
 
 def standalone_python_scripts(repository=PROJECT_DIR):
     names = sh.git(
+        "--no-pager",
         "ls-files",
         "--cached",
         "--others",
