@@ -2,10 +2,14 @@
 
 import json
 from pathlib import Path
-from types import MappingProxyType
 from textwrap import indent
+from types import MappingProxyType
 
 from markdown.extensions.toc import slugify_unicode
+from mkdocs_macros_sparqld import run_query
+from mkdocs_macros_sparqld.render import parse_result
+
+from example_rendering.media_types import encoding_format_query
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 METADATA = "ro-crate-metadata.json"
@@ -46,13 +50,8 @@ def crate_files(crate_dir):
 def file_media_type(crate_dir, file_name):
     if file_name == METADATA:
         return "application/ld+json"
-    graph = json.loads((crate_dir / METADATA).read_text())["@graph"]
-    entity = next(
-        entity
-        for entity in graph
-        if entity.get("@type") == "File" and entity.get(IDENTIFIER) == file_name
-    )
-    return entity.get("encodingFormat", "")
+    content_type, body = run_query(encoding_format_query(crate_dir, file_name))
+    return next(iter(parse_result(content_type, body))).get("format", "")
 
 
 def file_icon(file_name, media_type):
