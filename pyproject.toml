@@ -15,7 +15,7 @@ dependencies = [
     "mkdocs-macros-plugin>=1.5.0",
     "mkdocs-macros-sparqld>=0.2.0",
     "pymdown-extensions>=10.0",
-    "roc-validator",
+    "roc-validator>=0.13.0",
     "ruff>=0.17.1,<0.18",
     "sh>=2.0",
     "ruamel.yaml>=0.18,<0.20",
