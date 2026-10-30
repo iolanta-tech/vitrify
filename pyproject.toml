@@ -18,7 +18,9 @@ dependencies = [
     "roc-validator",
     "ruff>=0.17.1,<0.18",
     "sh>=2.0",
+    "ruamel.yaml>=0.18,<0.20",
     "wemake-python-styleguide>=1.8.1,<2",
+    "yamllint>=1.37,<2",
 ]
 
 [tool.setuptools]
@@ -28,3 +30,9 @@ packages = []
 target-version = "py313"
 include = ["*.py", "*.pyi"]
 extend-exclude = [".docs-tools", "build", "site", "target", "docs/examples"]
+
+[tool.ruff.lint]
+select = ["TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"yaml".msg = "Use a YAML 1.2 parser instead of PyYAML."
