@@ -51,7 +51,7 @@ def file_media_type(crate_dir, file_name):
     if file_name == METADATA:
         return "application/ld+json"
     content_type, body = run_query(encoding_format_query(crate_dir, file_name))
-    return next(iter(parse_result(content_type, body))).get("format", "")
+    return next(iter(parse_result(content_type, body)), {}).get("format", "")
 
 
 def file_icon(file_name, media_type):
