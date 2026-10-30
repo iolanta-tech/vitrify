@@ -48,6 +48,7 @@ plugins:
 
 exclude_docs: |
   **/AGENTS.md
+  contexts/**
 
 nav:
   - Home: index.md
