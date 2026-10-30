@@ -13,7 +13,7 @@ import sh
 from docs_macros.endpoints import endpoint_label
 from docs_macros.storage import storage_name
 
-PROFILE = "ro-crate-1.2"
+PROFILE = "ro-crate-1.3"
 MINIMUM_EXIT_CODE = -128
 MAXIMUM_EXIT_CODE = 256
 PROCESS_EXIT_CODES = range(MINIMUM_EXIT_CODE, MAXIMUM_EXIT_CODE)
@@ -45,7 +45,9 @@ def _retrieve(example, endpoint, directory):
     rich.print(f"[b]{name}[/b]: running {endpoint_label(endpoint)} retrieval…")
     with tempfile.TemporaryDirectory(prefix="vitrify-example-") as temporary:
         output = Path(temporary) / name
-        completed = sh.Command("vitrify")(
+        completed = sh.Command(
+            "vitrify", search_paths=_environment()["PATH"].split(os.pathsep)
+        )(
             *example.arguments(endpoint, output),
             _in=example.query,
             _cwd=temporary,
