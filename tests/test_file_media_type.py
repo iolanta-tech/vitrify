@@ -4,7 +4,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from example_rendering import artifacts
+from docs_macros.rendering import artifacts
 
 CRATE = artifacts.ROOT_DIR / "docs/examples/basic-example/eu-capitals"
 FILE_IRI = "sparqld:examples/basic-example/eu-capitals/results.csv"
