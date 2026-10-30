@@ -46,7 +46,7 @@ unless the reader explicitly wants a new retrieval.
 The home page and `examples/eu-capitals.md` intentionally show the same complete
 EU-capitals example: command, directory, query, result table, and crate
 metadata. This is an allowed exception to the concision and duplication rules.
-Keep both pages self-contained and reuse the shared script and macros.
+Keep both pages self-contained and reuse the shared definition and macros.
 
 ## Home-page identity
 
