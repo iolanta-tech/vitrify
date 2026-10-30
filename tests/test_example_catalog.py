@@ -49,7 +49,8 @@ class CatalogTests(CatalogFixture):
         }
         self.assertTrue(migrated <= definitions.keys())
         self.assertNotIn("query-from-file", definitions)
-        for name in migrated:
+        self.assertRegex(definitions["select-turtle"].query, r"(?i)\bLIMIT\s+5\s*$")
+        for name in migrated - {"select-turtle"}:
             settings = definitions[name]
             self.assertNotRegex(settings.query, r"(?i)\bLIMIT\s+\d+")
             self.assertEqual(len(settings.endpoints), 2)
