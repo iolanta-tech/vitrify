@@ -13,6 +13,12 @@ metadata.
 approach: the query can be versioned and reused in a pipeline. The other
 examples use `printf` and standard input to keep their commands self-contained.
 
+<div class="grid cards" markdown>
+
 {{ examples_index() }}
+
+-   :material-file-document-outline: **[Query from a file](query-from-file.md)**
+
+</div>
 
 [Add an example](authoring.md).
