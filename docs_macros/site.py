@@ -11,6 +11,7 @@ from docs_macros.definitions import plain_title
 from docs_macros.endpoints import endpoint_key
 from docs_macros.history import captures, endpoints
 from docs_macros.pages import generated_files, example_template
+from docs_macros.lifecycle import on_build_error as on_build_error
 
 
 def on_config(config):
