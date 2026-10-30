@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import example_history
+from docs_macros import history as example_history
 
 METADATA = "ro-crate-metadata.json"
 RESULT_FILE = "results.csv"
