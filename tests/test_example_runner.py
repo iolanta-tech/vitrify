@@ -1,70 +1,100 @@
-"""Check that refreshes append captures and continue after failures."""
+"""Run page-defined requests against local HTTP success and failure fixtures."""
 
 import contextlib
 import io
-import os
-import shlex
+import json
+import subprocess
+import threading
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 
-import jeeves
+from jeeves import runner as example_runner
+from docs_macros.definitions import Example
+from history_fixtures import HistoryFixture, PRIMARY, SECONDARY
 
-from history_fixtures import (
-    HistoryFixture,
-    PRIMARY,
-    SECONDARY,
-    RESULT_FILE,
-    EXECUTABLE_MODE,
-)
+from catalog_fixtures import QUERY
 
-RETRIEVAL_SCRIPT = "retrieve.sh"
+CSV_MEDIA_TYPE = "text/csv"
+
+
+class EndpointHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        query = self.rfile.read(int(self.headers["Content-Length"]))
+        request = (self.path, query, self.headers.get("Accept"))
+        self.server.received.append(request)
+        self.send_response(
+            HTTPStatus.SERVICE_UNAVAILABLE if self.path == "/failure" else HTTPStatus.OK
+        )
+        self.send_header("Content-Type", CSV_MEDIA_TYPE)
+        self.end_headers()
+        self.wfile.write(b"s\nhttps://example.org/item\n")
+
+    def log_message(self, *arguments):
+        """Keep fixture request logging in the captured request list."""
 
 
 class RunnerTests(HistoryFixture):
-    def test_runner_continues_after_failure(self):
-        validator = self._validator()
-        for name in (PRIMARY, SECONDARY):
-            self._script(name)
-        before = (self.directory() / RESULT_FILE).read_bytes()
-        environment = {
-            "PATH": os.pathsep.join((str(validator.parent), os.environ["PATH"]))
+    def setUp(self):
+        super().setUp()
+        subprocess.run(["cargo", "build", "--quiet"], check=True)
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), EndpointHandler)
+        self.server.received = []
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+        port = self.server.server_port
+        self.base = f"http://127.0.0.1:{port}"
+        self.endpoints = (f"{self.base}/failure", f"{self.base}/success")
+
+    def test_runner_continues_and_preserves_history(self):
+        definitions = {
+            name: Example(
+                name, name, QUERY, self.endpoints, "csv" if name == PRIMARY else None
+            )
+            for name in (PRIMARY, SECONDARY)
         }
+        before = self.baseline_bytes()
         with (
-            patch.object(jeeves, "EXAMPLES_DIR", self.root),
-            patch.object(
-                jeeves,
-                "EXAMPLES",
-                ((PRIMARY, RETRIEVAL_SCRIPT, "."), (SECONDARY, RETRIEVAL_SCRIPT, ".")),
-            ),
-            patch.dict(os.environ, environment),
+            patch.object(example_runner, "_validate", return_value=False) as validate,
             contextlib.redirect_stdout(io.StringIO()),
         ):
-            self._run_twice()
-        self._assert_attempts()
-        self.assertEqual((self.directory() / RESULT_FILE).read_bytes(), before)
-
-    def _validator(self):
-        validator = self.root / "bin" / "rocrate-validator"
-        validator.parent.mkdir()
-        validator.write_text("#!/bin/sh\nexit 0\n")
-        validator.chmod(EXECUTABLE_MODE)
-        return validator
-
-    def _script(self, name):
-        commands = ["# --endpoint https://query.wikidata.org/sparql", f"mkdir {name}"]
-        commands.extend(
-            f"cp {shlex.quote(str(self.fixture / filename))} {name}/"
-            for filename in self.baseline_files
+            for _ in range(2):
+                self.assertTrue(example_runner.run_examples(definitions, self.root))
+            self.assertEqual(validate.call_count, 8)
+        self.assertEqual(before, self.baseline_bytes())
+        self.assertEqual(len(self.server.received), 8)
+        queries = [request[1] for request in self.server.received]
+        self.assertEqual(set(queries), {QUERY.encode("utf-8")})
+        self.assertEqual(
+            [request[2] for request in self.server.received],
+            [
+                CSV_MEDIA_TYPE,
+                CSV_MEDIA_TYPE,
+                None,
+                None,
+                CSV_MEDIA_TYPE,
+                CSV_MEDIA_TYPE,
+                None,
+                None,
+            ],
         )
-        commands.append("exit 1" if name == PRIMARY else "exit 0")
-        script = "\n".join(commands)
-        (self.root / name / RETRIEVAL_SCRIPT).write_text(f"{script}\n")
+        self._assert_captures()
 
-    def _run_twice(self):
-        for _ in range(2):
-            with self.assertRaises(SystemExit):
-                jeeves.examples()
+    def test_new_capture_directory(self):
+        settings = Example("new-example", "New example", QUERY, (self.endpoints[1],))
+        with (
+            patch.object(example_runner, "_validate", return_value=False),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertFalse(
+                example_runner.run_examples({settings.name: settings}, self.root)
+            )
+        attempts = list((self.root / settings.name).iterdir())
+        self.assertEqual(len(attempts), 1)
 
-    def _assert_attempts(self):
+    def _assert_captures(self):
         for name in (PRIMARY, SECONDARY):
             attempts = [
                 child for child in self.directory(name).iterdir() if child.is_dir()
@@ -72,6 +102,15 @@ class RunnerTests(HistoryFixture):
             self.assertEqual(len(attempts), 4)
             for attempt in attempts:
                 self.assertEqual(
-                    {artifact.name for artifact in attempt.iterdir()},
-                    set(self.baseline_files),
+                    (attempt / "query.rq").read_bytes(), QUERY.encode("utf-8")
+                )
+                graph = json.loads((attempt / "ro-crate-metadata.json").read_text())[
+                    "@graph"
+                ]
+                action = next(
+                    entity for entity in graph if entity["@id"] == "#retrieval"
+                )
+                self.assertIn(
+                    action["actionStatus"]["@id"].rsplit("/", 1)[-1],
+                    {"FailedActionStatus", "CompletedActionStatus"},
                 )
