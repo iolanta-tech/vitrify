@@ -23,7 +23,7 @@ when no format was requested.
 even when the query was read from standard input.
 
 `ro-crate-metadata.json` is an [RO-Crate](https://www.researchobject.org/ro-crate/)
-1.2 JSON-LD document describing the
+1.3 JSON-LD document describing the
 retrieval. It links the result and query files and records their byte sizes and
 SHA-256 checksums, the result media type when provided, the endpoint, response
 status, final URL, requested `Accept` value when one was sent, and retrieval
@@ -84,5 +84,5 @@ The runner uses the local debug build when available, otherwise `vitrify` from
 `PATH`. It discovers Markdown-LD example pages and runs their endpoint variants sequentially in temporary directories and saves
 Vitrify's output in new timestamped directories. Earlier captures stay intact.
 It continues after individual failures, validates saved crates against RO-Crate
-1.2, and exits nonzero if any retrieval or validation failed. Validation results
+1.3, and exits nonzero if any retrieval or validation failed. Validation results
 appear in the terminal. Documentation builds read saved captures.
