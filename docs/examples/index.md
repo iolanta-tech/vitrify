@@ -11,20 +11,8 @@ metadata.
 
 [Query from a file](query-from-file.md) is probably the most production-ready
 approach: the query can be versioned and reused in a pipeline. The other
-examples use `echo` and standard input to keep their commands self-contained.
+examples use `printf` and standard input to keep their commands self-contained.
 
-- [Female Nobel laureates](female-persons.md) — a CSV result table from
-  Wikidata.
-- [EU capitals](eu-capitals.md) — five English capital labels in CSV.
-- [Query from a file](query-from-file.md) — save the EU-capitals query, then
-  run it with `--query query.rq`.
-- [Top ten metaclasses](top-metaclasses.md) — metaclasses ranked by direct
-  instance counts.
-- [Metaclasses of metaclasses](metaclasses-of-metaclasses.md) — metaclasses
-  whose recorded instances are all metaclasses, with example instances.
-- [Fourth-order classes](fourth-order-classes.md) — all items explicitly
-  typed as fourth-order classes.
-- [Time-bounded subclasses](time-bounded-subclasses.md) — a JSON result table
-  with subclass intervals.
-- [SELECT with Turtle requested](select-turtle.md) — a format negotiation
-  example requesting Turtle for a `SELECT` query.
+{{ examples_index() }}
+
+[Add an example](authoring.md).
