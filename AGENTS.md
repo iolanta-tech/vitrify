@@ -27,7 +27,7 @@ requirements.
   compare committed revisions, as CI does.
 - `j serve` starts the documentation site at `http://localhost:6453`.
 - `j examples` runs each Markdown-LD example on its configured endpoints and validates the
-  resulting crates against the RO-Crate 1.2 profile. It contacts the example
+  resulting crates against the RO-Crate 1.3 profile. It contacts the example
   endpoints and appends timestamped captures, so run it only when a
   deliberate refresh is in scope.
 
