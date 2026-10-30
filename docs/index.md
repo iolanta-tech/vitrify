@@ -1,6 +1,7 @@
 ---
 hide: [navigation, toc]
 icon: material/home
+history_endpoint: https://query.wikidata.org/sparql
 ---
 
 # Vitrify
@@ -25,11 +26,11 @@ icon: material/home
 
     ---
 
-    Capture five EU-capital labels in a local
+    Capture EU-capital labels in a local
     [RO-Crate](https://www.researchobject.org/ro-crate/).
 
     ```sh
-    --8<-- "docs/examples/basic-example/input/retrieve.sh"
+    {{ retrieval_command('eu-capitals') | add_indentation(spaces=4) }}
     ```
 
     <span class="vitrify-workflow-arrow" aria-hidden="true">:material-arrow-right:</span>
@@ -41,15 +42,17 @@ icon: material/home
     The ordinary response file is kept with the exact query and RO-Crate
     evidence.
 
-    {{ directory_preview('basic-example') | add_indentation(spaces=4) }}
+    {{ directory_preview('eu-capitals') | add_indentation(spaces=4) }}
 
 </div>
 
 ## :material-magnify: Inspect the capture
 
-{{ history_chart('basic-example') }}
+{{ history_chart('eu-capitals') }}
 
-{{ file_tabs('basic-example') }}
+{{ capture_notice('eu-capitals') }}
+
+{{ file_tabs('eu-capitals') }}
 
 [Full EU-capitals example](examples/eu-capitals.md){ .md-button }
 
