@@ -9,9 +9,7 @@ from docs_macros.rendering.directories import _tree_lines
 
 CRATE = artifacts.ROOT_DIR / "docs/examples/basic-example/eu-capitals"
 FILE_IRI = "sparqld:examples/basic-example/eu-capitals/results.csv"
-EMPTY_RESULTS = json.dumps(
-    {"head": {"vars": ["format"]}, "results": {"bindings": []}}
-)
+EMPTY_RESULTS = json.dumps({"head": {"vars": ["format"]}, "results": {"bindings": []}})
 
 
 class FileMediaTypeTests(unittest.TestCase):
