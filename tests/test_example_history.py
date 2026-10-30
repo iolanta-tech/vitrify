@@ -3,9 +3,10 @@
 from dataclasses import replace
 from unittest.mock import patch
 
-import example_endpoints
-import example_history
-from example_rendering import details, history
+from docs_macros import catalog as example_catalog
+from docs_macros import endpoints as example_endpoints
+from docs_macros import history as example_history
+from docs_macros.rendering import details, history
 
 from history_fixtures import (
     HistoryFixture,
@@ -113,10 +114,15 @@ class EndpointHistoryTests(HistoryFixture):
             self.assertEqual(example_history.captures(PRIMARY, WDQS), [])
 
     def test_commands_only_change_the_endpoint(self):
-        for example in set(example_history.PAGE_EXAMPLES.values()):
+        definitions = example_catalog.configure_catalog()
+        self.addCleanup(setattr, example_catalog.state, "definitions", None)
+        for example in definitions:
             commands = self._commands(example)
             self.assertEqual(commands[0], commands[1])
-            self.assertIn("--format ", commands[0])
+            if definitions[example].format is None:
+                self.assertNotIn("--format ", commands[0])
+            else:
+                self.assertIn("--format ", commands[0])
         command = example_endpoints.retrieval_command("basic-example", QLEVER)
         for prefix in ("wd:", "wdt:", "rdfs:"):
             self.assertIn(f"PREFIX {prefix}", command)
