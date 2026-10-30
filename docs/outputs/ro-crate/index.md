@@ -73,7 +73,7 @@ bar. Older captures use estimated durations derived from their recorded
 timestamps, marked with `≈`.
 
 From the repository root, with the project environment activated, append a new
-capture for every example on both endpoints (14 retrievals):
+capture for every example on its configured endpoints:
 
 ```sh
 cargo build
@@ -81,7 +81,7 @@ j examples
 ```
 
 The runner uses the local debug build when available, otherwise `vitrify` from
-`PATH`. It runs the displayed endpoint variants sequentially in temporary directories and saves
+`PATH`. It discovers Markdown-LD example pages and runs their endpoint variants sequentially in temporary directories and saves
 Vitrify's output in new timestamped directories. Earlier captures stay intact.
 It continues after individual failures, validates saved crates against RO-Crate
 1.2, and exits nonzero if any retrieval or validation failed. Validation results
