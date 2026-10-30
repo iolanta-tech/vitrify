@@ -94,6 +94,36 @@ class RunnerTests(HistoryFixture):
         attempts = list((self.root / settings.name).iterdir())
         self.assertEqual(len(attempts), 1)
 
+    def test_generated_crates_validate(self):
+        settings = Example("migration", "Migration", QUERY, self.endpoints, "csv")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(
+                example_runner.run_examples({settings.name: settings}, self.root)
+            )
+        attempts = list((self.root / settings.name).iterdir())
+        self.assertEqual(len(attempts), 2)
+        for attempt in attempts:
+            document = json.loads((attempt / "ro-crate-metadata.json").read_text())
+            self.assertEqual(
+                document["@context"], "https://w3id.org/ro/crate/1.3/context"
+            )
+            validation = subprocess.run(
+                [
+                    "rocrate-validator",
+                    "--no-interactive",
+                    "validate",
+                    "-p",
+                    "ro-crate-1.3",
+                    str(attempt),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(
+                validation.returncode, 0, validation.stdout + validation.stderr
+            )
+
     def _assert_captures(self):
         for name in (PRIMARY, SECONDARY):
             attempts = [
