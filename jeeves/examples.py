@@ -12,7 +12,5 @@ EXAMPLES_DIR = PROJECT_DIR / "docs" / "examples"
 
 def examples() -> None:
     """Append one retrieval per endpoint for every example and validate each crate."""
-    if run_examples(
-        load_catalog(EXAMPLES_DIR.parent), EXAMPLES_DIR
-    ):
+    if run_examples(load_catalog(EXAMPLES_DIR.parent), EXAMPLES_DIR):
         sys.exit(1)
