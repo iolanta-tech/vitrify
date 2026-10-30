@@ -1,7 +1,6 @@
 """Render current and recorded requests for embedded examples."""
 
 from docs_macros.catalog import catalog, definition
-from docs_macros.definitions import plain_title
 from docs_macros.endpoints import default_endpoint, endpoint_url
 from docs_macros.history import captures, selected_capture
 from docs_macros.requests import saved_request, request_notice
@@ -44,8 +43,8 @@ class RequestMacros:
         return definition(example).query
 
     def examples_index(self):
-        return "\n".join(
-            f"- [{plain_title(settings.title)}]({name}.md)"
+        return "\n\n".join(
+            f"-   **[{settings.title}]({name}.md)**"
             for name, settings in catalog().items()
         )
 
