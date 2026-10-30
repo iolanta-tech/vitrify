@@ -12,6 +12,7 @@ query: |
     ?person rdfs:label ?personName .
     FILTER(LANG(?personName) = "en")
   }
+  LIMIT 5
 ---
 
 # :material-code-json: SELECT with Turtle requested
