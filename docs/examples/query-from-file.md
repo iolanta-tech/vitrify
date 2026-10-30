@@ -4,27 +4,24 @@ hide: [toc]
 
 # :material-file-document-outline: Query from a file
 
-{{ history_chart('basic-example') }}
+{{ history_chart('eu-capitals') }}
 
 ## :material-file-document-edit-outline: Save as `query.rq`
 
 ```sparql
---8<-- "docs/examples/basic-example/input/query.rq"
+{{ query_text('eu-capitals') }}
 ```
 
 ## :material-console: Run the query
 
 ```bash
-vitrify sparql \
-  --endpoint {{ query_endpoint() }} \
-  --query query.rq \
-  --format csv \
-  --to eu-capitals
+{{ retrieval_command('eu-capitals', query_file='query.rq') }}
 ```
 
-This runs the same query as [EU capitals](eu-capitals.md) and writes the
-capture shown below.
+This runs the same query as [EU capitals](eu-capitals.md) and writes a new capture.
 
-{{ directory_preview('basic-example') }}
+{{ capture_notice('eu-capitals') }}
 
-{{ file_tabs('basic-example') }}
+{{ directory_preview('eu-capitals') }}
+
+{{ file_tabs('eu-capitals') }}
