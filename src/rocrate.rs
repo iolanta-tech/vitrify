@@ -1,4 +1,4 @@
-//! RO-Crate 1.2 JSON-LD for one SPARQL retrieval.
+//! RO-Crate 1.3 JSON-LD for one SPARQL retrieval.
 //!
 //! The crate is the package (`./`) plus the result and query files linked with
 //! `hasPart`. Attached evidence records the endpoint, SHA-256 of both files,
@@ -7,8 +7,8 @@
 use chrono::{DateTime, Utc};
 use serde_json::json;
 
-const CONTEXT: &str = "https://w3id.org/ro/crate/1.2/context";
-const PROFILE: &str = "https://w3id.org/ro/crate/1.2";
+const CONTEXT: &str = "https://w3id.org/ro/crate/1.3/context";
+const PROFILE: &str = "https://w3id.org/ro/crate/1.3";
 const DESCRIPTOR_ID: &str = "ro-crate-metadata.json";
 const ROOT_ID: &str = "./";
 
@@ -41,7 +41,7 @@ pub struct Retrieval {
     pub duration: f64,
 }
 
-/// Builds an RO-Crate 1.2 metadata document for one SPARQL result.
+/// Builds an RO-Crate 1.3 metadata document for one SPARQL result.
 pub fn metadata_json(retrieval: &Retrieval) -> String {
     let mut result_file = json!({
         "@id": retrieval.result_name,
@@ -264,12 +264,20 @@ mod tests {
     #[test]
     fn records_media_type_and_size() {
         let doc = metadata_json(&sample("female-persons.csv", Some("text/csv"), 42));
+        let document: Value = serde_json::from_str(&doc).unwrap();
+        assert_eq!(
+            document["@context"],
+            "https://w3id.org/ro/crate/1.3/context"
+        );
         let graph = graph(&doc);
 
         let descriptor = entity(&graph, "ro-crate-metadata.json");
         assert_eq!(descriptor["@type"], "CreativeWork");
         assert_eq!(descriptor["about"]["@id"], "./");
-        assert_eq!(descriptor["conformsTo"]["@id"], PROFILE);
+        assert_eq!(
+            descriptor["conformsTo"]["@id"],
+            "https://w3id.org/ro/crate/1.3"
+        );
 
         let root = entity(&graph, "./");
         assert_eq!(root["@type"], "Dataset");
@@ -281,6 +289,52 @@ mod tests {
         assert_eq!(file["@type"], "File");
         assert_eq!(file["encodingFormat"], "text/csv");
         assert_eq!(file["contentSize"], "42");
+    }
+
+    #[test]
+    fn attempts_use_ro_crate_1_3() {
+        let retrieval = sample("results.csv", Some("text/csv"), 42);
+        for (error, partial, status) in [
+            (None, None, "ActiveActionStatus"),
+            (Some("HTTP 503"), None, "FailedActionStatus"),
+            (
+                Some("Interrupted download"),
+                Some(("results.csv", Some("text/csv"))),
+                "FailedActionStatus",
+            ),
+        ] {
+            let doc = attempt_json(&Attempt {
+                endpoint: &retrieval.endpoint,
+                query: "ASK {}",
+                accept: None,
+                started: retrieval.started,
+                ended: error.map(|_| retrieval.ended),
+                duration: error.map(|_| retrieval.duration),
+                error,
+                response_status: None,
+                final_url: &retrieval.final_url,
+                partial,
+            });
+            let document: Value = serde_json::from_str(&doc).unwrap();
+            assert_eq!(
+                document["@context"],
+                "https://w3id.org/ro/crate/1.3/context"
+            );
+            let graph = graph(&doc);
+            assert_eq!(
+                entity(&graph, DESCRIPTOR_ID)["conformsTo"]["@id"],
+                "https://w3id.org/ro/crate/1.3"
+            );
+            let action = entity(&graph, "#retrieval");
+            assert_eq!(
+                action["actionStatus"]["@id"],
+                format!("http://schema.org/{status}")
+            );
+            assert!(action.get("result").is_none());
+            if partial.is_some() {
+                assert_eq!(entity(&graph, "results.csv")["@type"], "File");
+            }
+        }
     }
 
     #[test]
