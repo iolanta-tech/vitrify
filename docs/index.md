@@ -1,5 +1,7 @@
 ---
 hide: [navigation, toc]
+icon: material/home
+history_endpoint: https://query.wikidata.org/sparql
 ---
 
 # Vitrify
@@ -24,11 +26,11 @@ hide: [navigation, toc]
 
     ---
 
-    Capture five EU-capital labels in a local
+    Capture EU-capital labels in a local
     [RO-Crate](https://www.researchobject.org/ro-crate/).
 
     ```sh
-    --8<-- "docs/examples/basic-example/input/retrieve.sh"
+    {{ retrieval_command('eu-capitals') | add_indentation(spaces=4) }}
     ```
 
     <span class="vitrify-workflow-arrow" aria-hidden="true">:material-arrow-right:</span>
@@ -40,28 +42,19 @@ hide: [navigation, toc]
     The ordinary response file is kept with the exact query and RO-Crate
     evidence.
 
-    {{ directory_preview('basic-example') | add_indentation(spaces=4) }}
+    {{ directory_preview('eu-capitals') | add_indentation(spaces=4) }}
 
 </div>
 
 ## :material-magnify: Inspect the capture
 
-=== "Results CSV"
+{{ history_chart('eu-capitals') }}
 
-{{ read_csv('docs/examples/basic-example/eu-capitals/results.csv') | add_indentation(spaces=4) }}
+{{ capture_notice('eu-capitals') }}
 
-=== "RO-Crate metadata"
+{{ file_tabs('eu-capitals') }}
 
-    ```json
-    [
-      // Result file
-    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:37:42"
-      // … retrieval record follows; other crate entities are omitted
-    --8<-- "docs/examples/basic-example/eu-capitals/ro-crate-metadata.json:62:85"
-    ]
-    ```
-
-[Full stdin example](examples/stdin.md).
+[Full EU-capitals example](examples/eu-capitals.md){ .md-button }
 
 ## What is vitrification?
 

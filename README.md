@@ -3,19 +3,47 @@
 [![Documentation](https://img.shields.io/badge/docs-Vitrify-blue)](https://vitrify.iolanta.tech/)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-Vitrify saves a SPARQL retrieval as an ordinary local file with attached RO-Crate evidence.
+Vitrify saves a SPARQL response as an ordinary local file, alongside the exact
+query and RO-Crate retrieval evidence.
 
-From the repository root, install Vitrify and retrieve a Wikidata result:
+With Rust and Cargo installed, install Vitrify from crates.io:
 
 ```sh
 cargo install vitrify
-vitrify sparql \
-  --endpoint https://query.wikidata.org/sparql \
-  --query docs/examples/female-persons/query.rq \
-  --format csv \
-  --to female-persons
 ```
 
-This writes `female-persons/results.csv` with `query.rq` and
-`ro-crate-metadata.json`. See the [documentation](https://vitrify.iolanta.tech/)
-for the command reference, output details, workflows, and roadmap.
+Retrieve EU-capital labels from Wikidata:
+
+```sh
+echo 'SELECT ?label WHERE { ?country wdt:P463 wd:Q458; wdt:P36 ?capital . ?capital rdfs:label ?label . FILTER(LANG(?label) = "en") } ORDER BY ?label' |
+  vitrify sparql \
+  --endpoint https://query.wikidata.org/sparql \
+  --query - \
+  --format csv \
+  --to eu-capitals
+```
+
+The output directory contains:
+
+```text
+eu-capitals/
+  results.csv
+  query.rq
+  ro-crate-metadata.json
+```
+
+`results.csv` is the endpoint response body, stored unchanged. The metadata
+records retrieval details, including the endpoint, response media type, and
+checksums for the query and result. A captured response looks like this:
+
+```csv
+label
+Amsterdam
+Athens
+Berlin
+Bratislava
+Brussels
+```
+
+See the [CLI reference](https://vitrify.iolanta.tech/cli/) for options and the
+[roadmap](https://vitrify.iolanta.tech/roadmap/) for planned work.
