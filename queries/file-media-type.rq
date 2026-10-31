@@ -1,0 +1,10 @@
+PREFIX schema: <http://schema.org/>
+
+SELECT ?format WHERE {
+  GRAPH <${graph}> {
+    <${file_iri}> a schema:MediaObject .
+    OPTIONAL {
+      <${file_iri}> schema:encodingFormat ?format .
+    }
+  }
+}

@@ -21,6 +21,13 @@ pub use error::{Error, Result};
 pub fn sparql(endpoint: &str, query_arg: &str, format: Option<&str>, to: &Path) -> Result<()> {
     let requested_format = sparql::requested_format(format)?;
     let query = sparql::load_query(query_arg)?;
+    let endpoint_uri = endpoint
+        .parse::<oxhttp::model::Uri>()
+        .map_err(|error| Error::new(format!("invalid endpoint: {error}")))?;
+    if !matches!(endpoint_uri.scheme_str(), Some("http" | "https")) || endpoint_uri.host().is_none()
+    {
+        return Err(Error::new("endpoint must be an absolute HTTP(S) URL"));
+    }
     fs::create_dir_all(to).map_err(|error| {
         Error::new(format!(
             "cannot create output directory {}: {error}",
