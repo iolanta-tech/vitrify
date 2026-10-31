@@ -4,5 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    reviewers:
+      - "anatoly-scherbakov"
     allow:
       - dependency-type: all
