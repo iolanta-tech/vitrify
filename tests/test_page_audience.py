@@ -22,9 +22,7 @@ class PageAudienceTests(CatalogFixture):
         )
         with CatalogService(self.root) as service:
             rows = service.query(load_query("audiences.rq"))
-        audiences = {
-            row["document"]["value"]: row["audience"]["value"] for row in rows
-        }
+        audiences = {row["document"]["value"]: row["audience"]["value"] for row in rows}
         self.assertEqual(audiences["sparqld:examples/authoring.md"], USER)
         self.assertEqual(audiences["sparqld:AGENTS.md"], "maintainer")
 
