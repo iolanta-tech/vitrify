@@ -54,6 +54,8 @@ cargo build
 j examples
 ```
 
+Each Saturday, GitHub Actions runs `j examples` and merges the new captures.
+
 Each attempt is saved in a new timestamped directory beside its example.
 Failures remain part of the history. Requests retain the CLI's 120-second
 timeout and 1 GiB response limit.
