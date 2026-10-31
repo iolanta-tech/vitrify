@@ -38,6 +38,8 @@ struct Fixture {
     _server: oxhttp::ListeningServer,
 }
 
+static PORT_SELECTION: Mutex<()> = Mutex::new(());
+
 fn free_port() -> u16 {
     TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
         .unwrap()
@@ -49,6 +51,7 @@ fn free_port() -> u16 {
 /// Starts a loopback server that records the request and replies `200` with
 /// `content_type` and `body`.
 fn spawn(reply_content_type: &'static str, reply_body: &'static [u8]) -> Fixture {
+    let _selection = PORT_SELECTION.lock().unwrap();
     let port = free_port();
     let captured = Arc::new(Mutex::new(Captured::default()));
     let handler_captured = Arc::clone(&captured);
@@ -95,6 +98,37 @@ fn temp_dir() -> PathBuf {
 }
 
 const SELECT: &str = "SELECT ?s WHERE { ?s ?p ?o } LIMIT 1";
+
+#[test]
+fn response_content_type_names_the_file_while_format_sets_accept() {
+    let body = b"s\nhttp://example.org/a\n";
+    let fixture = spawn("Text/CSV; charset=utf-8", body);
+    let dir = temp_dir();
+    Command::cargo_bin("vitrify")
+        .unwrap()
+        .args(["sparql", "--endpoint", &fixture.base_url, "--query", "-"])
+        .args(["--format", "turtle", "--to"])
+        .arg(&dir)
+        .write_stdin(SELECT)
+        .assert()
+        .success();
+
+    assert_eq!(
+        fixture.captured.lock().unwrap().accept.as_deref(),
+        Some("text/turtle")
+    );
+    assert_eq!(fs::read(dir.join("results.csv")).unwrap(), body);
+    assert!(!dir.join("results.ttl").exists());
+    let document: Value =
+        serde_json::from_slice(&fs::read(dir.join("ro-crate-metadata.json")).unwrap()).unwrap();
+    let action = document["@graph"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entity| entity["@id"] == "#retrieval")
+        .unwrap();
+    assert_eq!(action["result"]["@id"], "results.csv");
+}
 
 #[test]
 fn posts_query_from_file_verbatim_and_writes_the_body() {
@@ -158,4 +192,56 @@ fn reads_the_query_from_stdin_when_query_is_dash() {
     let captured = fixture.captured.lock().unwrap();
     assert_eq!(captured.body, SELECT);
     assert_eq!(captured.accept, None);
+}
+
+#[test]
+fn connection_failure_is_a_saved_failed_attempt() {
+    let _selection = PORT_SELECTION.lock().unwrap();
+    let port = free_port();
+    let dir = temp_dir();
+    Command::cargo_bin("vitrify")
+        .unwrap()
+        .args([
+            "sparql",
+            "--endpoint",
+            &format!("http://127.0.0.1:{port}/sparql"),
+            "--query",
+            "-",
+        ])
+        .arg("--to")
+        .arg(&dir)
+        .write_stdin(SELECT)
+        .assert()
+        .failure();
+    let document: Value =
+        serde_json::from_str(&fs::read_to_string(dir.join("ro-crate-metadata.json")).unwrap())
+            .unwrap();
+    let graph = document["@graph"].as_array().unwrap();
+    let action = graph
+        .iter()
+        .find(|entity| entity["@id"] == "#retrieval")
+        .unwrap();
+    assert_eq!(
+        action["actionStatus"]["@id"],
+        "http://schema.org/FailedActionStatus"
+    );
+    assert!(action.get("result").is_none());
+    assert!(action["endTime"].is_string());
+    assert!(graph.iter().any(|entity| entity["@id"] == "#error"));
+    assert_eq!(fs::read_to_string(dir.join("query.rq")).unwrap(), SELECT);
+    assert!(!dir.join("results.csv").exists());
+}
+
+#[test]
+fn invalid_endpoint_does_not_initialize_an_attempt() {
+    let dir = temp_dir().join("output");
+    Command::cargo_bin("vitrify")
+        .unwrap()
+        .args(["sparql", "--endpoint", "relative/path", "--query", "-"])
+        .arg("--to")
+        .arg(&dir)
+        .write_stdin(SELECT)
+        .assert()
+        .failure();
+    assert!(!dir.exists());
 }

@@ -4,25 +4,24 @@ hide: [toc]
 
 # :material-file-document-outline: Query from a file
 
-Create a file named `query.rq` in your working directory with this content:
+{{ history_chart('eu-capitals') }}
+
+## :material-file-document-edit-outline: Save as `query.rq`
 
 ```sparql
---8<-- "docs/examples/basic-example/eu-capitals/query.rq"
+{{ query_text('eu-capitals') }}
 ```
 
-From the same directory, run:
+## :material-console: Run the query
 
 ```bash
-vitrify sparql \
-  --endpoint https://query.wikidata.org/sparql \
-  --query query.rq \
-  --format csv \
-  --to eu-capitals
+{{ retrieval_command('eu-capitals', query_file='query.rq') }}
 ```
 
-This runs the same query as [EU capitals](eu-capitals.md) and writes the
-capture shown below.
+This runs the same query as [EU capitals](eu-capitals.md) and writes a new capture.
 
-{{ directory_preview('basic-example') }}
+{{ capture_notice('eu-capitals') }}
 
-{{ file_tabs('basic-example') }}
+{{ directory_preview('eu-capitals') }}
+
+{{ file_tabs('eu-capitals') }}

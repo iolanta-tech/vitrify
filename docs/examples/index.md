@@ -11,20 +11,14 @@ metadata.
 
 [Query from a file](query-from-file.md) is probably the most production-ready
 approach: the query can be versioned and reused in a pipeline. The other
-examples use `echo` and standard input to keep their commands self-contained.
+examples use `printf` and standard input to keep their commands self-contained.
 
-- [Female Nobel laureates](female-persons.md) — a CSV result table from
-  Wikidata.
-- [EU capitals](eu-capitals.md) — five English capital labels in CSV.
-- [Query from a file](query-from-file.md) — save the EU-capitals query, then
-  run it with `--query query.rq`.
-- [Top ten metaclasses](top-metaclasses.md) — metaclasses ranked by direct
-  instance counts in QLever.
-- [Metaclasses of metaclasses](metaclasses-of-metaclasses.md) — metaclasses
-  whose recorded instances are all metaclasses, with example instances.
-- [Fourth-order classes](fourth-order-classes.md) — all items explicitly
-  typed as fourth-order classes.
-- [Time-bounded subclasses](time-bounded-subclasses.md) — a JSON result table
-  with subclass intervals.
-- [SELECT response returned as JSON](select-turtle.md) — a format negotiation
-  example where the endpoint returned JSON despite a Turtle request.
+<div class="grid cards" markdown>
+
+{{ examples_index() }}
+
+-   :material-file-document-outline: **[Query from a file](query-from-file.md)**
+
+</div>
+
+[Add an example](authoring.md).

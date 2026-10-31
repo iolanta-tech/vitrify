@@ -12,10 +12,10 @@ With Rust and Cargo installed, install Vitrify from crates.io:
 cargo install vitrify
 ```
 
-Retrieve five EU-capital labels from Wikidata:
+Retrieve EU-capital labels from Wikidata:
 
 ```sh
-echo 'SELECT ?label WHERE { ?country wdt:P463 wd:Q458; wdt:P36 ?capital . ?capital rdfs:label ?label . FILTER(LANG(?label) = "en") } ORDER BY ?label LIMIT 5' |
+echo 'SELECT ?label WHERE { ?country wdt:P463 wd:Q458; wdt:P36 ?capital . ?capital rdfs:label ?label . FILTER(LANG(?label) = "en") } ORDER BY ?label' |
   vitrify sparql \
   --endpoint https://query.wikidata.org/sparql \
   --query - \
