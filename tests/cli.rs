@@ -170,7 +170,7 @@ fn posts_query_from_file_verbatim_and_writes_the_body() {
     let body = fs::read(&out).unwrap();
     assert_eq!(
         entity("results.csv")["sha256"],
-        format!("{:x}", Sha256::digest(&body))
+        hex::encode(Sha256::digest(&body))
     );
     assert_eq!(fs::read(dir.join("query.rq")).unwrap(), SELECT.as_bytes());
     assert_eq!(entity("query.rq")["@type"], "File");
