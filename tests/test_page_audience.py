@@ -9,6 +9,15 @@ from docs_macros.service import CatalogService
 from catalog_fixtures import CatalogFixture
 
 USER = "user"
+DOCUMENT = "document"
+AUDIENCE = "audience"
+
+
+def _audience_by_document(rows):
+    audiences = {}
+    for row in rows:
+        audiences[row[DOCUMENT]["value"]] = row[AUDIENCE]["value"]
+    return audiences
 
 
 class PageAudienceTests(CatalogFixture):
@@ -21,8 +30,9 @@ class PageAudienceTests(CatalogFixture):
             (project / "docs/AGENTS.md").read_text(encoding="utf-8")
         )
         with CatalogService(self.root) as service:
-            rows = service.query(load_query("audiences.rq"))
-        audiences = {row["document"]["value"]: row["audience"]["value"] for row in rows}
+            audiences = _audience_by_document(
+                service.query(load_query("audiences.rq")),
+            )
         self.assertEqual(audiences["sparqld:examples/authoring.md"], USER)
         self.assertEqual(audiences["sparqld:AGENTS.md"], "maintainer")
 
