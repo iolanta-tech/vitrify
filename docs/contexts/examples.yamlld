@@ -1,0 +1,13 @@
+"@context":
+  - https://json-ld.org/contexts/dollar-convenience.jsonld
+  - query: urn:vitrify:vocabulary:query
+    endpoints:
+      "@id": urn:vitrify:vocabulary:endpoints
+      "@type": "@id"
+      "@container": "@set"
+    format: urn:vitrify:vocabulary:format
+    context-file:
+      "@id": https://sparqld.iolanta.tech/context-file
+      "@type": "@id"
+$id: urn:vitrify:examples
+context-file: examples.yamlld

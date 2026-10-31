@@ -4,20 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vitrify-site"
-version = "0.1.0"
+version = "0.1.1"
 description = "Documentation site and development commands for Vitrify."
 readme = "docs/index.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "jeeves-shell[all]",
     "mkdocs>=1.6",
     "mkdocs-material>=9.7.0",
     "mkdocs-macros-plugin>=1.5.0",
-    "mkdocs-table-reader-plugin>=3.1.0,<4.0.0",
+    "mkdocs-macros-sparqld>=0.2.0",
     "pymdown-extensions>=10.0",
-    "roc-validator",
+    "roc-validator>=0.13.0",
+    "ruff>=0.17.1,<0.18",
     "sh>=2.0",
+    "ruamel.yaml>=0.18,<0.20",
+    "wemake-python-styleguide>=1.8.1,<2",
+    "yamllint>=1.37,<2",
 ]
 
 [tool.setuptools]
 packages = []
+
+[tool.ruff]
+target-version = "py313"
+include = ["*.py", "*.pyi"]
+extend-exclude = [".docs-tools", "build", "site", "target", "docs/examples"]
+
+[tool.ruff.lint]
+select = ["TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"yaml".msg = "Use a YAML 1.2 parser instead of PyYAML."

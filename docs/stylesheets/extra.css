@@ -6,6 +6,16 @@
   gap: 1rem;
 }
 
+.md-typeset p:has(> .md-button.github-file-link) {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.md-typeset .md-button.github-file-link {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 .md-typeset .admonition.example > .admonition-title .example-source-link,
 .md-typeset details.example > summary .example-source-link {
   margin-left: auto;
@@ -44,3 +54,125 @@
     display: none;
   }
 }
+
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned) {
+  background-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .vitrify-outputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.md-typeset .example-history {
+  margin: 0 0 1.5rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
+}
+
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.65rem;
+}
+
+.history-controls { display: flex; gap: 0.25rem; }
+.history-controls button {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.15rem;
+  cursor: pointer;
+}
+.history-controls button:focus-visible { outline: 2px solid var(--md-accent-fg-color); }
+.history-chart {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.15rem 0.4rem;
+  position: relative;
+  scrollbar-width: thin;
+}
+.md-typeset .history-attempt {
+  flex: 0 0 3rem;
+  padding: 0.2rem;
+  border-radius: 0.2rem;
+  text-align: center;
+  color: var(--md-default-fg-color);
+}
+.history-attempt[aria-current="page"], .history-attempt:focus-visible {
+  outline: 2px solid var(--md-primary-fg-color);
+  outline-offset: -2px;
+  background: var(--md-default-fg-color--lightest);
+}
+.history-column { display: flex; align-items: end; justify-content: center; height: 100px; }
+.history-bar {
+  display: block;
+  position: relative;
+  width: 1.4rem;
+  min-height: 3px;
+  border-radius: 0.15rem 0.15rem 0 0;
+  background: var(--md-primary-fg-color);
+}
+.history-failure .history-bar { background: #b42318; }
+.history-failure .history-unknown-marker { color: #b42318; }
+.history-incomplete .history-bar { background: #806000; }
+.history-incomplete .history-unknown-marker { color: #806000; }
+.history-success .history-unknown-marker { color: var(--md-primary-fg-color); }
+.history-unknown-marker {
+  position: relative;
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  margin-bottom: 0.2rem;
+}
+.history-unknown-marker::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+.history-question { position: relative; font-size: 0.65rem; line-height: 1rem; }
+.history-duration { display: block; margin-top: 0.4rem; white-space: nowrap; font-size: 0.55rem; }
+
+.history-date { display: block; margin-top: 0.3rem; white-space: nowrap; font-size: 0.6rem; }
+.md-typeset .history-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+  margin: -0.8rem 0 0.8rem;
+  font-size: 0.7rem;
+  color: var(--md-default-fg-color--light);
+}
+.history-detail > span:not(.history-separator) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.history-icon { display: inline-flex; width: 0.9rem; height: 0.9rem; }
+.history-icon svg { width: 100%; height: 100%; fill: currentColor; }
+.history-outcome-success .history-icon { color: #198754; }
+.history-outcome-failure .history-icon { color: #b42318; }
+.history-outcome-incomplete .history-icon { color: #806000; }
+
+.md-typeset .example-endpoints {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  margin: -0.8rem 0 1rem;
+}
+.example-endpoints a { padding: 0.4rem 0; color: var(--md-default-fg-color--light); }
+.example-endpoints a[aria-current="page"] {
+  color: var(--md-primary-fg-color);
+  border-bottom: 2px solid currentColor;
+  font-weight: 700;
+}
+.md-typeset .example-endpoints + .history-detail { margin-top: 0; }
