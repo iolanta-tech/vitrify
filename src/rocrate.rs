@@ -6,6 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 const CONTEXT: &str = "https://w3id.org/ro/crate/1.3/context";
 const PROFILE: &str = "https://w3id.org/ro/crate/1.3";
@@ -148,7 +149,6 @@ pub struct Attempt<'a> {
 
 /// Records an active or failed action without asserting a complete result.
 pub fn attempt_json(attempt: &Attempt<'_>) -> String {
-    use sha2::{Digest, Sha256};
     let mut root = json!({
         "@id": ROOT_ID, "@type": "Dataset", "name": "SPARQL retrieval",
         "description": "SPARQL retrieval recorded by Vitrify.",
@@ -185,7 +185,7 @@ pub fn attempt_json(attempt: &Attempt<'_>) -> String {
     let mut graph = vec![
         json!({"@id": DESCRIPTOR_ID, "@type": "CreativeWork", "conformsTo": {"@id": PROFILE}, "about": {"@id": ROOT_ID}}),
         json!({"@id": QUERY_FILE_NAME, "@type": "File", "encodingFormat": "application/sparql-query",
-            "contentSize": attempt.query.len().to_string(), "sha256": format!("{:x}", Sha256::digest(attempt.query.as_bytes()))}),
+            "contentSize": attempt.query.len().to_string(), "sha256": hex::encode(Sha256::digest(attempt.query.as_bytes()))}),
         json!({"@id": attempt.endpoint, "@type": "Organization"}),
         json!({"@id": "https://vitrify.iolanta.tech", "@type": "SoftwareApplication", "name": "Vitrify",
             "url": "https://vitrify.iolanta.tech", "version": env!("CARGO_PKG_VERSION")}),
@@ -220,6 +220,11 @@ mod tests {
     use serde_json::Value;
 
     const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+    #[test]
+    fn sha256_hex_matches_the_empty_digest() {
+        assert_eq!(hex::encode(Sha256::digest(b"")), EMPTY_SHA256);
+    }
 
     fn sample(result_name: &str, media_type: Option<&str>, byte_size: u64) -> Retrieval {
         Retrieval {
