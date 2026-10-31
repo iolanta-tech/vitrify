@@ -1,0 +1,65 @@
+name: Refresh examples
+
+on:
+  schedule:
+    - cron: '0 4 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install sparqld --version 0.1.6 --locked
+      - run: python -m pip install .
+      - run: cargo build
+      - name: Retrieve examples
+        id: examples
+        run: |
+          set +e
+          j examples
+          status=$?
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Merge new captures
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          status="${{ steps.examples.outputs.status }}"
+          case "$status" in
+            ''|*[!0-9]*)
+              echo "missing example status"
+              exit 1
+              ;;
+          esac
+          if [ -z "$(git status --porcelain -- docs/examples)" ]; then
+            echo "j examples wrote no captures"
+            exit 1
+          fi
+          branch="example-captures/$(date -u +%Y-%m-%d)"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            branch="${branch}-${GITHUB_RUN_ID}"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -- docs/examples
+          git commit -m "Refresh example captures"
+          git push --set-upstream origin "$branch"
+          pr_url="$(gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Refresh example captures" \
+            --body "Weekly retrieval of the documented examples.")"
+          gh pr merge --auto --squash --delete-branch "$pr_url"
+          exit "$status"
