@@ -61,5 +61,14 @@ jobs:
             --head "$branch" \
             --title "Refresh example captures" \
             --body "Weekly retrieval of the documented examples.")"
-          gh pr merge --auto --squash --delete-branch "$pr_url"
+          merge_state="$(gh pr view "$pr_url" --json mergeStateStatus --jq .mergeStateStatus)"
+          echo "Pull request merge state: ${merge_state}"
+          case "$merge_state" in
+            BLOCKED|BEHIND)
+              gh pr merge --auto --squash --delete-branch "$pr_url"
+              ;;
+            *)
+              gh pr merge --squash --delete-branch "$pr_url"
+              ;;
+          esac
           exit "$status"
