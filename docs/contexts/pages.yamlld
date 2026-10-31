@@ -1,0 +1,5 @@
+"@context":
+  - https://json-ld.org/contexts/dollar-convenience.jsonld
+  - audience: urn:vitrify:vocabulary:audience
+$id: urn:vitrify:pages
+context-file: pages.yamlld
