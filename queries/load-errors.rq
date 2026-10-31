@@ -1,0 +1,8 @@
+PREFIX rlog: <http://persistence.uni-leipzig.org/nlp2rdf/ontologies/rlog#>
+
+SELECT ?source ?message WHERE {
+  GRAPH <sparqld:> {
+    ?error rlog:resource ?source;
+           rlog:message ?message .
+  }
+}

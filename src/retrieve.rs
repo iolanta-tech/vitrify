@@ -3,7 +3,7 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use chrono::Utc;
 use oxhttp::Client;
@@ -33,12 +33,7 @@ struct Exchange {
     final_url: String,
 }
 
-/// Executes `query` against `endpoint`, negotiating `accept`, and writes the
-/// result to `to` alongside `ro-crate-metadata.json`.
-///
-/// A non-2xx status or an unsupported content coding fails before anything is
-/// written. The body is then written straight to `to`, so a mid-stream failure
-/// can leave a partial file, as with `curl`.
+/// Executes one retrieval, recording its outcome even when the request fails.
 pub fn fetch_to_file(
     endpoint: &str,
     query: &str,
@@ -50,20 +45,128 @@ pub fn fetch_to_file(
         .with_user_agent(user_agent())
         .map_err(|e| Error::new(format!("invalid User-Agent: {e}")))?
         .with_redirection_limit(0);
+    let mut exchange = Exchange {
+        endpoint: endpoint.to_owned(),
+        query: query.to_owned(),
+        format,
+        started: Utc::now(),
+        final_url: endpoint.to_owned(),
+    };
+    record_attempt(output_dir, &mut exchange, |exchange| {
+        let (response, final_url) = perform(&client, endpoint, query, format.map(|f| f.accept))?;
+        exchange.final_url = final_url;
+        Ok(response)
+    })
+}
 
-    let started = Utc::now();
-    let (response, final_url) = perform(&client, endpoint, query, format.map(|f| f.accept))?;
-    write_crate(
-        response,
-        output_dir,
-        &Exchange {
-            endpoint: endpoint.to_owned(),
-            query: query.to_owned(),
-            format,
-            started,
-            final_url,
-        },
-    )
+fn record_attempt(
+    output_dir: &Path,
+    exchange: &mut Exchange,
+    request: impl FnOnce(&mut Exchange) -> Result<Response<Body>>,
+) -> Result<()> {
+    let (query_byte_size, query_sha256) = write_query_snapshot(output_dir, &exchange.query)?;
+    let metadata_path = output_dir.join(METADATA_FILE_NAME);
+    let initial = rocrate::attempt_json(&rocrate::Attempt {
+        endpoint: &exchange.endpoint,
+        query: &exchange.query,
+        accept: exchange.format.map(|f| f.accept),
+        started: exchange.started,
+        ended: None,
+        duration: None,
+        error: None,
+        response_status: None,
+        final_url: &exchange.final_url,
+        partial: None,
+    });
+    write_metadata(&metadata_path, &initial)?;
+    let clock = Instant::now();
+    let mut response_status = None;
+    let mut media_type = None;
+    let mut result_name = None;
+    let outcome = (|| {
+        let response = request(exchange)?;
+        let status = response.status();
+        response_status = Some(status.as_u16());
+        if !status.is_success() {
+            return Err(Error::new(format!("endpoint returned HTTP {status}")));
+        }
+        check_content_encoding(&response)?;
+        media_type = response_media_type(&response);
+        let extension = sparql::extension_for_media_type(media_type.as_deref())
+            .or_else(|| exchange.format.map(|f| f.extension))
+            .unwrap_or_else(|| {
+                eprintln!("warning: no extension is known for the response Content-Type; writing results.dat");
+                "dat"
+            });
+        let name = format!("results.{extension}");
+        let result_path = output_dir.join(&name);
+        result_name = Some(name.clone());
+        let (byte_size, sha256) = stream_body(response, &result_path)?;
+        let ended = Utc::now();
+        let duration = clock.elapsed().as_secs_f64();
+        let document = rocrate::metadata_json(&Retrieval {
+            result_name: name,
+            media_type: media_type.clone(),
+            byte_size,
+            sha256,
+            query_byte_size,
+            query_sha256,
+            endpoint: exchange.endpoint.clone(),
+            accept: exchange.format.map(|f| f.accept.to_owned()),
+            status: status.as_u16(),
+            final_url: exchange.final_url.clone(),
+            started: exchange.started,
+            ended,
+            duration,
+        });
+        Ok((document, result_path))
+    })();
+    match outcome {
+        Ok((document, result_path)) => {
+            write_metadata(&metadata_path, &document)?;
+            eprintln!("wrote: {}", result_path.display());
+            eprintln!("metadata: {}", metadata_path.display());
+            Ok(())
+        }
+        Err(error) => {
+            let ended = Utc::now();
+            let duration = clock.elapsed().as_secs_f64();
+            let message = error.to_string();
+            let partial = result_name
+                .as_deref()
+                .filter(|name| output_dir.join(name).is_file());
+            let document = rocrate::attempt_json(&rocrate::Attempt {
+                endpoint: &exchange.endpoint,
+                query: &exchange.query,
+                accept: exchange.format.map(|f| f.accept),
+                started: exchange.started,
+                ended: Some(ended),
+                duration: Some(duration),
+                error: Some(&message),
+                response_status,
+                final_url: &exchange.final_url,
+                partial: partial.map(|name| (name, media_type.as_deref())),
+            });
+            write_metadata(&metadata_path, &document).map_err(|write_error| {
+                Error::new(format!(
+                    "{error}; could not persist retrieval metadata: {write_error}"
+                ))
+            })?;
+            Err(error)
+        }
+    }
+}
+
+#[cfg(test)]
+fn write_crate(response: Response<Body>, output_dir: &Path, exchange: &Exchange) -> Result<()> {
+    let mut exchange = Exchange {
+        endpoint: exchange.endpoint.clone(),
+        query: exchange.query.clone(),
+        format: exchange.format,
+        started: exchange.started,
+        final_url: exchange.final_url.clone(),
+    };
+    record_attempt(output_dir, &mut exchange, |_| Ok(response))
 }
 
 fn perform(
@@ -124,56 +227,12 @@ fn redirect_target(response: &Response<Body>, from: &str) -> Result<String> {
     }
 }
 
-/// Writes the result body and RO-Crate metadata into the output directory.
-fn write_crate(response: Response<Body>, output_dir: &Path, exchange: &Exchange) -> Result<()> {
-    let status = response.status();
-    if !status.is_success() {
-        return Err(Error::new(format!("endpoint returned HTTP {status}")));
-    }
-    check_content_encoding(&response)?;
-    let media_type = response_media_type(&response);
-
-    let root = output_dir;
-    let extension = if let Some(format) = exchange.format {
-        format.extension
-    } else if let Some(extension) = sparql::extension_for_media_type(media_type.as_deref()) {
-        extension
-    } else {
-        match media_type.as_deref() {
-            Some(media_type) => eprintln!(
-                "warning: no extension is known for response Content-Type `{media_type}`; writing results.dat"
-            ),
-            None => eprintln!("warning: response has no Content-Type; writing results.dat"),
-        }
-        "dat"
-    };
-    let result_name = format!("results.{extension}");
-    let result_path = root.join(&result_name);
-
-    let (query_byte_size, query_sha256) = write_query_snapshot(&root, &exchange.query)?;
-
-    let (byte_size, sha256) = stream_body(response, &result_path)?;
-    let ended = Utc::now();
-
-    let document = rocrate::metadata_json(&Retrieval {
-        result_name,
-        media_type,
-        byte_size,
-        sha256,
-        query_byte_size,
-        query_sha256,
-        endpoint: exchange.endpoint.clone(),
-        accept: exchange.format.map(|format| format.accept.to_owned()),
-        status: status.as_u16(),
-        final_url: exchange.final_url.clone(),
-        started: exchange.started,
-        ended,
-    });
-    let metadata_path = root.join(METADATA_FILE_NAME);
-    write_bytes(&metadata_path, document.as_bytes())?;
-    eprintln!("wrote: {}", result_path.display());
-    eprintln!("metadata: {}", metadata_path.display());
-    Ok(())
+/// Replace metadata atomically so an interrupted write retains the previous state.
+fn write_metadata(path: &Path, document: &str) -> Result<()> {
+    let temporary = path.with_extension("json.tmp");
+    write_bytes(&temporary, document.as_bytes())?;
+    std::fs::rename(&temporary, path)
+        .map_err(|e| Error::new(format!("cannot replace {}: {e}", path.display())))
 }
 
 /// Stores the exact UTF-8 query sent to the endpoint in the crate.
@@ -362,6 +421,60 @@ mod tests {
     }
 
     #[test]
+    fn response_media_type_overrides_requested_extension() {
+        let dir = unique_dir();
+        let body = br#"{"head":{"vars":[]},"results":{"bindings":[]}}"#;
+        write_crate(
+            response(
+                200,
+                Some("Application/SPARQL-Results+JSON; charset=utf-8"),
+                body,
+            ),
+            &dir,
+            &exchange(),
+        )
+        .unwrap();
+
+        assert_eq!(fs::read(dir.join("results.json")).unwrap(), body);
+        assert!(!dir.join("results.csv").exists());
+        assert_eq!(
+            crate_entity(&dir, "#retrieval")["result"]["@id"],
+            "results.json"
+        );
+    }
+
+    #[test]
+    fn missing_or_unknown_media_type_falls_back_to_requested_extension() {
+        for media_type in [None, Some("application/octet-stream")] {
+            let dir = unique_dir();
+            write_crate(response(200, media_type, b"s\n"), &dir, &exchange()).unwrap();
+            assert_eq!(fs::read(dir.join("results.csv")).unwrap(), b"s\n");
+            assert_eq!(
+                crate_entity(&dir, "#retrieval")["result"]["@id"],
+                "results.csv"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_media_type_without_requested_format_uses_dat() {
+        let dir = unique_dir();
+        let mut exchange = exchange();
+        exchange.format = None;
+        write_crate(
+            response(200, Some("application/octet-stream"), b"x"),
+            &dir,
+            &exchange,
+        )
+        .unwrap();
+        assert_eq!(fs::read(dir.join("results.dat")).unwrap(), b"x");
+        assert_eq!(
+            result_entity(&dir, "results.dat")["encodingFormat"],
+            "application/octet-stream"
+        );
+    }
+
+    #[test]
     fn records_sha256_matching_the_file_on_disk() {
         let dir = unique_dir();
         let body = b"a,b\n";
@@ -403,14 +516,85 @@ mod tests {
     }
 
     #[test]
-    fn non_success_status_writes_nothing() {
+    fn non_success_status_records_failure_without_overwriting_existing_result() {
         let dir = unique_dir();
         let to = dir.join("results.csv");
         fs::write(&to, b"OLD").unwrap();
 
         assert!(write_crate(response(500, Some("text/csv"), b"boom"), &dir, &exchange(),).is_err());
         assert_eq!(fs::read(&to).unwrap(), b"OLD");
-        assert!(!dir.join(METADATA_FILE_NAME).exists());
+        let action = crate_entity(&dir, "#retrieval");
+        assert_eq!(
+            action["actionStatus"]["@id"],
+            "http://schema.org/FailedActionStatus"
+        );
+        assert!(action.get("result").is_none());
+        assert_eq!(
+            crate_entity(&dir, "#error")["description"],
+            "endpoint returned HTTP 500 Internal Server Error"
+        );
+    }
+
+    #[test]
+    fn interrupted_body_is_preserved_as_incomplete() {
+        struct Interrupted(bool);
+        impl Read for Interrupted {
+            fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+                if self.0 {
+                    Err(std::io::Error::new(
+                        std::io::ErrorKind::TimedOut,
+                        "download timed out",
+                    ))
+                } else {
+                    self.0 = true;
+                    buffer[..4].copy_from_slice(b"s\npa");
+                    Ok(4)
+                }
+            }
+        }
+        let dir = unique_dir();
+        let response = Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/csv")
+            .body(Body::from_read(Interrupted(false)))
+            .unwrap();
+        assert!(write_crate(response, &dir, &exchange()).is_err());
+        assert_eq!(fs::read(dir.join("results.csv")).unwrap(), b"s\npa");
+        let action = crate_entity(&dir, "#retrieval");
+        assert_eq!(
+            action["actionStatus"]["@id"],
+            "http://schema.org/FailedActionStatus"
+        );
+        assert!(action.get("result").is_none());
+        assert_eq!(
+            crate_entity(&dir, "results.csv")["description"],
+            "Incomplete response from a failed retrieval."
+        );
+    }
+
+    #[test]
+    fn metadata_measures_response_bytes_independently_of_formatting() {
+        let dir = unique_dir();
+        for body in [
+            br#"{"results":{"bindings":[]}}"#.as_slice(),
+            b"{\n  \"results\": {\n    \"bindings\": []\n  }\n}\n".as_slice(),
+            "é\n".as_bytes(),
+            b"".as_slice(),
+        ] {
+            write_crate(
+                response(200, Some("application/sparql-results+json"), body),
+                &dir,
+                &exchange(),
+            )
+            .unwrap();
+            assert_eq!(
+                crate_entity(&dir, "results.json")["contentSize"],
+                body.len().to_string()
+            );
+            let metadata = std::fs::read_to_string(dir.join(METADATA_FILE_NAME)).unwrap();
+            assert!(!metadata.contains("row-count"));
+            assert_eq!(std::fs::read(dir.join("results.json")).unwrap(), body);
+        }
     }
 
     #[test]

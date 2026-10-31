@@ -1,0 +1,23 @@
+PREFIX example: <urn:vitrify:vocabulary:>
+PREFIX sd: <http://www.w3.org/ns/sparql-service-description#>
+
+SELECT ?page ?definition ?property ?value WHERE {
+  {
+    GRAPH ?page {
+      ?definition ?candidate ?anything .
+      VALUES ?candidate { example:query example:endpoints }
+      ?definition ?property ?value .
+      VALUES ?property { example:query example:endpoints example:format }
+    }
+  } UNION {
+    GRAPH <sparqld:> { ?page sd:namedGraph/sd:name ?graph }
+    GRAPH ?graph {
+      ?definition ?candidate ?anything .
+      VALUES ?candidate { example:query example:endpoints }
+      ?definition ?property ?value .
+      VALUES ?property { example:query example:endpoints example:format }
+    }
+  }
+  FILTER(STRSTARTS(STR(?page), "sparqld:examples/"))
+  FILTER(STRENDS(STR(?page), ".md"))
+}

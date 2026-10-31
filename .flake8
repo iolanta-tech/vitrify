@@ -1,0 +1,9 @@
+[flake8]
+select = WPS,VIT001
+extend-exclude = .venv,.docs-tools,build,site,target
+jobs = 1
+per-file-ignores = tests/*:VIT001
+
+[flake8:local-plugins]
+extension = VIT001 = project_checks.string_lines:StringLinesChecker
+paths = .
