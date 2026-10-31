@@ -1,0 +1,95 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.2/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.2"
+      }
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "contentSize": "311",
+      "encodingFormat": "application/sparql-query",
+      "sha256": "d08b3aa60646c5fdfa5af1ba9495879d23a7ad54822914195865f927cc81703a"
+    },
+    {
+      "@id": "https://qlever.dev/api/wikidata",
+      "@type": "Organization"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.2"
+    },
+    {
+      "@id": "#retrieval-duration",
+      "@type": "PropertyValue",
+      "name": "Retrieval duration",
+      "propertyID": "retrieval-duration",
+      "unitCode": "SEC",
+      "value": 0.514779736
+    },
+    {
+      "@id": "#error",
+      "@type": "Thing",
+      "description": "endpoint returned HTTP 502 Bad Gateway"
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "additionalProperty": [
+        {
+          "@id": "#retrieval-duration"
+        }
+      ],
+      "datePublished": "2026-10-30T17:47:28.791913826+00:00",
+      "description": "SPARQL retrieval recorded by Vitrify.",
+      "hasPart": [
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "name": "SPARQL retrieval",
+      "publisher": {
+        "@id": "https://qlever.dev/api/wikidata"
+      }
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "actionStatus": {
+        "@id": "http://schema.org/FailedActionStatus"
+      },
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "description": "HTTP 502; Accept: text/csv",
+      "endTime": "2026-10-30T17:47:28.791913826+00:00",
+      "error": {
+        "@id": "#error"
+      },
+      "identifier": "https://qlever.dev/api/wikidata",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://qlever.dev/api/wikidata"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "startTime": "2026-10-30T17:47:28.265593199+00:00"
+    }
+  ]
+}
