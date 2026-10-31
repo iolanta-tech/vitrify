@@ -240,7 +240,7 @@ fn write_query_snapshot(root: &Path, query: &str) -> Result<(u64, String)> {
     let path = root.join(QUERY_FILE_NAME);
     let bytes = query.as_bytes();
     write_bytes(&path, bytes)?;
-    Ok((bytes.len() as u64, format!("{:x}", Sha256::digest(bytes))))
+    Ok((bytes.len() as u64, hex::encode(Sha256::digest(bytes))))
 }
 
 fn check_content_encoding(response: &Response<Body>) -> Result<()> {
@@ -308,7 +308,7 @@ fn stream_body(response: Response<Body>, path: &Path) -> Result<(u64, String)> {
         .map_err(|e| Error::new(format!("could not flush the result: {e}")))?;
     file.sync_all()
         .map_err(|e| Error::new(format!("could not sync the result: {e}")))?;
-    Ok((written, format!("{:x}", hasher.finalize())))
+    Ok((written, hex::encode(hasher.finalize())))
 }
 
 #[cfg(test)]
@@ -480,13 +480,10 @@ mod tests {
         let body = b"a,b\n";
         write_crate(response(200, Some("text/csv"), body), &dir, &exchange()).unwrap();
 
-        let expected = format!("{:x}", Sha256::digest(body));
+        let expected = hex::encode(Sha256::digest(body));
         assert_eq!(result_entity(&dir, "results.csv")["sha256"], expected);
         assert_eq!(
-            format!(
-                "{:x}",
-                Sha256::digest(fs::read(dir.join("results.csv")).unwrap())
-            ),
+            hex::encode(Sha256::digest(fs::read(dir.join("results.csv")).unwrap())),
             expected
         );
     }
