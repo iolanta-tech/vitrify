@@ -1,0 +1,8 @@
+PREFIX page: <urn:vitrify:vocabulary:>
+
+SELECT ?document ?audience WHERE {
+  GRAPH ?document {
+    ?subject page:audience ?audience .
+  }
+  FILTER(STRENDS(STR(?document), ".md"))
+}

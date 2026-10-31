@@ -1,7 +1,30 @@
+---
+"@context": urn:vitrify:pages
+audience: maintainer
+---
+
 # Docs audience
 
-This site publishes at https://vitrify.iolanta.tech. Write every page for
-the readers below. MkDocs excludes this file from the built site.
+This site publishes at https://vitrify.iolanta.tech. Write every published
+page for the user below. MkDocs excludes this file from the built site.
+
+Public pages address that reader and do not describe them.
+
+## Roles
+
+Each page records its role in frontmatter as `audience`. The value is
+queryable with sparqld.
+
+### User
+
+The reader in the next section. Every published page has `audience: user`.
+That reader adds an example by opening a pull request. CI retrieves each
+changed example page. The reader does not generate examples on their machine.
+
+### Maintainer
+
+This file has `audience: maintainer`. It holds repository machinery: CI,
+contexts, and catalog checks. Do not put that procedure on a user page.
 
 ## Primary reader
 

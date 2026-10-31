@@ -58,15 +58,91 @@ jobs:
     needs: [format, lint]
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      - name: Changed example pages
+        id: examples
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE_SHA"
+          names=()
+          while IFS= read -r filepath; do
+            [ -n "$filepath" ] || continue
+            case "$filepath" in
+              docs/examples/*.md)
+                page="${filepath#docs/examples/}"
+                page="${page%.md}"
+                case "$page" in
+                  index|authoring|query-from-file) ;;
+                  *) names+=("$page") ;;
+                esac
+                ;;
+            esac
+          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- docs/examples)
+          echo "names=${names[*]-}" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.examples.outputs.names != ''
       - run: cargo install sparqld --version 0.1.6 --locked
       - run: python -m pip install .
-      - run: mkdocs build --strict
+      - name: Retrieve changed examples
+        id: retrieve
+        if: steps.examples.outputs.names != ''
+        env:
+          EXAMPLE_NAMES: ${{ steps.examples.outputs.names }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          cargo build
+          args=()
+          for page in $EXAMPLE_NAMES; do
+            args+=(--name "$page")
+          done
+          status=0
+          j examples "${args[@]}" || status=$?
+          if [ -n "$(git status --porcelain -- docs/examples)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- docs/examples
+            git commit -m "Save captures for changed examples"
+            if [ "$SAME_REPO" = true ]; then
+              git push origin "HEAD:${HEAD_BRANCH}"
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          exit "$status"
+      - name: Record docs build on the capture commit
+        if: steps.retrieve.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.retrieve.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdocs build --strict
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" \
+            -f name=build-docs \
+            -f head_sha="$HEAD_SHA" \
+            -f status=completed \
+            -f conclusion=success \
+            -f started_at="$now" \
+            -f completed_at="$now"
+      - name: Build documentation
+        if: steps.retrieve.outputs.pushed != 'true'
+        run: mkdocs build --strict
 
   publish-docs:
     needs: [format, lint]
