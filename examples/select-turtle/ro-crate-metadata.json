@@ -1,0 +1,87 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.2/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.2"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "author": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "datePublished": "2026-10-04T18:49:01.098558752+00:00",
+      "description": "SPARQL retrieval materialized by Vitrify.",
+      "hasPart": [
+        {
+          "@id": "results.ttl"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "name": "results.ttl",
+      "publisher": {
+        "@id": "https://qlever.dev/api/wikidata"
+      }
+    },
+    {
+      "@id": "results.ttl",
+      "@type": "File",
+      "contentSize": "550",
+      "encodingFormat": "application/sparql-results+json",
+      "sha256": "efcd3f1ad3f8c2a9b152be8a6e057df8402c77b142a07d6ed8fd91b7053c0d82"
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "contentSize": "169",
+      "encodingFormat": "application/sparql-query",
+      "sha256": "47300242cfaa497f2b78404a96c9d5a170846e43038d9e7b9edc7a7cbd2fd81e"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.0"
+    },
+    {
+      "@id": "https://qlever.dev/api/wikidata",
+      "@type": "Organization"
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "description": "HTTP 200; Accept: text/turtle",
+      "endTime": "2026-10-04T18:49:01.098558752+00:00",
+      "identifier": "https://qlever.dev/api/wikidata",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://qlever.dev/api/wikidata"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "result": {
+        "@id": "results.ttl"
+      },
+      "startTime": "2026-10-04T18:49:00.278195863+00:00"
+    }
+  ]
+}
