@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  checks: write
 
 jobs:
   refresh:
@@ -56,19 +57,31 @@ jobs:
           git add -- docs/examples
           git commit -m "Refresh example captures"
           git push --set-upstream origin "$branch"
+          sha="$(git rev-parse HEAD)"
           pr_url="$(gh pr create \
             --base main \
             --head "$branch" \
             --title "Refresh example captures" \
             --body "Weekly retrieval of the documented examples.")"
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
+          mkdocs build --strict
+          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" \
+            -f name=build-docs \
+            -f head_sha="$sha" \
+            -f status=completed \
+            -f conclusion=success \
+            -f started_at="$now" \
+            -f completed_at="$now"
           merge_state="$(gh pr view "$pr_url" --json mergeStateStatus --jq .mergeStateStatus)"
           echo "Pull request merge state: ${merge_state}"
           case "$merge_state" in
-            BLOCKED|BEHIND)
-              gh pr merge --auto --squash --delete-branch "$pr_url"
-              ;;
-            *)
+            CLEAN)
               gh pr merge --squash --delete-branch "$pr_url"
               ;;
+            *)
+              gh pr merge --auto --squash --delete-branch "$pr_url"
+              ;;
           esac
-          exit "$status"
