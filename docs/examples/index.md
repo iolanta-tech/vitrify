@@ -1,8 +1,8 @@
 ---
-icon: material/flask
+icon: material/book-open-variant
 ---
 
-# :material-flask: Examples
+# :material-book-open-variant: Examples
 
 Each example shows a saved SPARQL query, a preview of its response, and the
 files Vitrify wrote. Open a file link in the directory preview to inspect the
