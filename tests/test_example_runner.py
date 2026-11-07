@@ -24,7 +24,11 @@ class EndpointHandler(BaseHTTPRequestHandler):
         request = (self.path, query, self.headers.get("Accept"))
         self.server.received.append(request)
         self.send_response(
-            HTTPStatus.SERVICE_UNAVAILABLE if self.path == "/failure" else HTTPStatus.OK
+            {
+                "/failure": HTTPStatus.SERVICE_UNAVAILABLE,
+                "/gateway-timeout": HTTPStatus.GATEWAY_TIMEOUT,
+                "/rate-limit": HTTPStatus.TOO_MANY_REQUESTS,
+            }.get(self.path, HTTPStatus.OK)
         )
         self.send_header("Content-Type", CSV_MEDIA_TYPE)
         self.end_headers()
@@ -81,6 +85,21 @@ class RunnerTests(HistoryFixture):
             ],
         )
         self._assert_captures()
+
+    def test_timeout_and_rate_limit_succeed(self):
+        endpoints = (
+            f"{self.base}/gateway-timeout",
+            f"{self.base}/rate-limit",
+        )
+        settings = Example("limits", "Limits", QUERY, endpoints)
+        with (
+            patch.object(example_runner, "_validate", return_value=False),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            failed = example_runner.run_examples({settings.name: settings}, self.root)
+        self.assertFalse(failed)
+        captures = list((self.root / settings.name).iterdir())
+        self.assertEqual(len(captures), 2)
 
     def test_new_capture_directory(self):
         settings = Example("new-example", "New example", QUERY, (self.endpoints[1],))
