@@ -55,8 +55,14 @@
   }
 }
 
-.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned) {
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned),
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-considered) {
   background-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-planned) a,
+.md-typeset .vitrify-outputs > ul > li:has(.vitrify-output-considered) a {
   color: var(--md-default-fg-color--light);
 }
 
