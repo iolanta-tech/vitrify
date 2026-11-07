@@ -1,5 +1,6 @@
 """Append endpoint retrievals and validate their saved crates."""
 
+import json
 import os
 import shutil
 import sys
@@ -14,6 +15,9 @@ from docs_macros.endpoints import endpoint_label
 from docs_macros.storage import storage_name
 
 PROFILE = "ro-crate-1.3"
+TRANSIENT_HTTP_STATUSES = frozenset((429, 504))
+HTTP_STATUS_PREFIX = "HTTP "
+RETRIEVAL_ID = "#retrieval"
 MINIMUM_EXIT_CODE = -128
 MAXIMUM_EXIT_CODE = 256
 PROCESS_EXIT_CODES = range(MINIMUM_EXIT_CODE, MAXIMUM_EXIT_CODE)
@@ -61,7 +65,12 @@ def _retrieve(example, endpoint, directory):
             rich.print(f"[red]{name}: no retrieval metadata was saved[/red]")
             return True
         destination = _save_capture(output, directory)
-    return _validate(name, destination) or completed.exit_code != 0
+    if _validate(name, destination):
+        return True
+    return (
+        completed.exit_code != 0
+        and _http_status(destination) not in TRANSIENT_HTTP_STATUSES
+    )
 
 
 def _destination(directory):
@@ -83,6 +92,20 @@ def _save_capture(output, directory):
         shutil.copytree(output, staging, dirs_exist_ok=True)
         os.replace(staging, destination)
     return destination
+
+
+def _http_status(destination):
+    document = json.loads((destination / "ro-crate-metadata.json").read_text())
+    action = next(
+        entity for entity in document["@graph"] if entity.get("@id") == RETRIEVAL_ID
+    )
+    description = action.get("description", "")
+    if not description.startswith(HTTP_STATUS_PREFIX):
+        return None
+    number = description.removeprefix(HTTP_STATUS_PREFIX).split(";", 1)[0]
+    if not number.isdecimal():
+        return None
+    return int(number)
 
 
 def _validate(name, destination):
