@@ -14,6 +14,8 @@ extra_javascript:
 theme:
   name: material
   custom_dir: overrides
+  icon:
+    logo: material/flask
   palette:
     scheme: default
     primary: teal
