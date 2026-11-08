@@ -14,9 +14,14 @@ def source(path, repo_url, title="Source", collapsed=False):
     if not source_path.is_file():
         raise ValueError(f"Documentation source does not exist: {path}")
     heading = _heading(source_path, repo_url, title)
-    syntax = {".json": "json", ".rq": "sparql", ".sh": "bash"}.get(
-        source_path.suffix.lower(), "text"
-    )
+    syntax = {
+        ".json": "json",
+        ".jsonld": "json",
+        ".yaml": "yaml",
+        ".yamlld": "yaml",
+        ".rq": "sparql",
+        ".sh": "bash",
+    }.get(source_path.suffix.lower(), "text")
     code = _code(source_path, syntax)
     marker = "???" if collapsed else "!!!"
     return f'{marker} example "{heading}"\n\n{code}\n'
