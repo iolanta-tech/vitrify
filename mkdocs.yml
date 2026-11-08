@@ -60,7 +60,10 @@ nav:
       - examples/index.md
       - Query from a file: examples/query-from-file.md
       - Add an example: examples/authoring.md
-  - cli.md
+  - CLI:
+      - cli/index.md
+      - sparql: cli/sparql.md
+      - context: cli/context.md
   - Outputs:
       - outputs/index.md
       - RO-Crate: outputs/ro-crate/index.md
