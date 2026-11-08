@@ -7,7 +7,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY))
 
 from docs_macros.catalog import catalog, configure_catalog
-from docs_macros.definitions import plain_title
+from docs_macros.definitions import ContextExample, plain_title
 from docs_macros.endpoints import endpoint_key
 from docs_macros.history import captures, endpoints
 from docs_macros.pages import generated_files, example_template
@@ -25,11 +25,38 @@ def on_config(config):
 
 def _navigation(existing, definitions):
     supporting = [page for page in existing if not _executable_nav(page, definitions)]
-    executable = [
-        {plain_title(settings.title): f"examples/{name}.md"}
-        for name, settings in definitions.items()
+    sparql = []
+    context = []
+    for name, settings in definitions.items():
+        item = {plain_title(settings.title): f"examples/{name}.md"}
+        if isinstance(settings, ContextExample):
+            context.append(item)
+        else:
+            sparql.append(item)
+    sections = [supporting[0]]
+    sparql_pages = [*sparql, *_sparql_guides(supporting[1:])]
+    if sparql_pages:
+        sections.append({"SPARQL": sparql_pages})
+    if context:
+        sections.append({"Context": context})
+    sections.extend(_other_guides(supporting[1:]))
+    return sections
+
+
+def _page_path(page):
+    if isinstance(page, dict):
+        return next(iter(page.values()))
+    return page
+
+
+def _sparql_guides(pages):
+    return [page for page in pages if _page_path(page).endswith("query-from-file.md")]
+
+
+def _other_guides(pages):
+    return [
+        page for page in pages if not _page_path(page).endswith("query-from-file.md")
     ]
-    return [supporting[0], *executable, *supporting[1:]]
 
 
 def _executable_nav(page, definitions):
@@ -50,6 +77,8 @@ def on_files(files, config):
             continue
         template = original.content_string
         if page in catalog():
+            if isinstance(catalog()[page], ContextExample):
+                continue
             template = example_template(template, example)
             original.content_string = template
         _append_variants(files, page, example, template, config)
