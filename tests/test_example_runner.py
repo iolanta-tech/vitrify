@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 
 from jeeves import runner as example_runner
-from docs_macros.definitions import Example
+from docs_macros.definitions import ContextExample, Example
 from history_fixtures import HistoryFixture, PRIMARY, SECONDARY
 
 from catalog_fixtures import QUERY
@@ -19,6 +19,14 @@ CSV_MEDIA_TYPE = "text/csv"
 
 
 class EndpointHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = b'{"@context":{"name":"http://example.org/name"}}\n'
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/ld+json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_POST(self):
         query = self.rfile.read(int(self.headers["Content-Length"]))
         request = (self.path, query, self.headers.get("Accept"))
@@ -100,6 +108,19 @@ class RunnerTests(HistoryFixture):
         self.assertFalse(failed)
         captures = list((self.root / settings.name).iterdir())
         self.assertEqual(len(captures), 2)
+
+    def test_context_example_saves_both_serializations(self):
+        settings = ContextExample("annotation", "Annotation", f"{self.base}/success")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(
+                example_runner.run_examples({settings.name: settings}, self.root)
+            )
+        attempts = list((self.root / settings.name).iterdir())
+        self.assertEqual(len(attempts), 1)
+        saved = attempts[0]
+        document = json.loads((saved / "context.jsonld").read_text())
+        self.assertEqual(document["@context"]["name"], "http://example.org/name")
+        self.assertIn("http://example.org/name", (saved / "context.yamlld").read_text())
 
     def test_new_capture_directory(self):
         settings = Example("new-example", "New example", QUERY, (self.endpoints[1],))
