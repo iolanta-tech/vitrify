@@ -54,6 +54,10 @@ jobs:
           fi
           j lint --base "$comparison_base" --head "$HEAD_SHA"
 
+      - name: Check the CLI model
+        if: github.event_name == 'pull_request'
+        run: j cli-model --check
+
   build-docs:
     needs: [format, lint]
     if: github.event_name == 'pull_request'
