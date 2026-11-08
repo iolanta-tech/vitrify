@@ -5,7 +5,8 @@ from pathlib import Path
 
 from docs_macros.catalog import catalog
 from docs_macros.captures import Capture as Capture
-from docs_macros.captures import read_capture
+from docs_macros.captures import read_capture as read_crate
+from docs_macros.context_captures import DOCUMENT, read_context_capture
 from docs_macros.endpoints import endpoint_url
 from docs_macros.storage import baseline_directory, storage_name
 
@@ -48,11 +49,18 @@ def selected_capture(example, identifier=None, endpoint=None):
     return next(capture for capture in saved if capture.identifier == identifier)
 
 
+def read_capture(directory, identifier=None):
+    if (directory / "ro-crate-metadata.json").is_file():
+        return read_crate(directory, identifier)
+    return read_context_capture(directory, identifier)
+
+
 def _is_capture(directory):
+    recorded = ("ro-crate-metadata.json", DOCUMENT)
     return (
         directory.is_dir()
         and TIMESTAMP.fullmatch(directory.name)
-        and (directory / "ro-crate-metadata.json").is_file()
+        and any((directory / name).is_file() for name in recorded)
     )
 
 
