@@ -3,26 +3,21 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use chrono::Utc;
 use oxhttp::Client;
-use oxhttp::model::header::{ACCEPT, CONTENT_ENCODING, CONTENT_TYPE, HeaderValue, LOCATION};
+use oxhttp::model::header::{ACCEPT, CONTENT_TYPE, HeaderValue};
 use oxhttp::model::{Body, Method, Request, Response, StatusCode};
 use sha2::{Digest, Sha256};
 
 use crate::error::{Error, Result};
+use crate::http::{self, MAX_REDIRECTS};
 use crate::rocrate::{self, METADATA_FILE_NAME, QUERY_FILE_NAME, Retrieval};
 use crate::sparql::{self, Format};
 
-const TIMEOUT: Duration = Duration::from_secs(120);
-const MAX_REDIRECTS: usize = 5;
 const MAX_BYTES: u64 = 1 << 30; // 1 GiB
 const QUERY_CONTENT_TYPE: &str = "application/sparql-query";
-
-fn user_agent() -> String {
-    format!("vitrify/{}", env!("CARGO_PKG_VERSION"))
-}
 
 /// The plan and timing of the HTTP exchange, known before the body is stored.
 struct Exchange {
@@ -40,11 +35,7 @@ pub fn fetch_to_file(
     format: Option<&'static Format>,
     output_dir: &Path,
 ) -> Result<()> {
-    let client = Client::new()
-        .with_global_timeout(TIMEOUT)
-        .with_user_agent(user_agent())
-        .map_err(|e| Error::new(format!("invalid User-Agent: {e}")))?
-        .with_redirection_limit(0);
+    let client = http::client()?;
     let mut exchange = Exchange {
         endpoint: endpoint.to_owned(),
         query: query.to_owned(),
@@ -90,8 +81,8 @@ fn record_attempt(
         if !status.is_success() {
             return Err(Error::new(format!("endpoint returned HTTP {status}")));
         }
-        check_content_encoding(&response)?;
-        media_type = response_media_type(&response);
+        http::check_content_encoding(&response)?;
+        media_type = http::response_media_type(&response);
         let extension = sparql::extension_for_media_type(media_type.as_deref())
             .or_else(|| exchange.format.map(|f| f.extension))
             .unwrap_or_else(|| {
@@ -194,7 +185,7 @@ fn perform(
         if status.is_redirection() {
             match status {
                 StatusCode::TEMPORARY_REDIRECT | StatusCode::PERMANENT_REDIRECT => {
-                    target = redirect_target(&response, &target)?;
+                    target = http::redirect_target(&response, &target)?;
                     continue;
                 }
                 other => {
@@ -211,22 +202,6 @@ fn perform(
     )))
 }
 
-fn redirect_target(response: &Response<Body>, from: &str) -> Result<String> {
-    let location = response
-        .headers()
-        .get(LOCATION)
-        .ok_or_else(|| Error::new("redirect response has no Location header"))?
-        .to_str()
-        .map_err(|_| Error::new("redirect Location header is not valid text"))?;
-    if location.starts_with("http://") || location.starts_with("https://") {
-        Ok(location.to_string())
-    } else {
-        Err(Error::new(format!(
-            "relative redirect from {from} to {location} is not supported"
-        )))
-    }
-}
-
 /// Replace metadata atomically so an interrupted write retains the previous state.
 fn write_metadata(path: &Path, document: &str) -> Result<()> {
     let temporary = path.with_extension("json.tmp");
@@ -241,32 +216,6 @@ fn write_query_snapshot(root: &Path, query: &str) -> Result<(u64, String)> {
     let bytes = query.as_bytes();
     write_bytes(&path, bytes)?;
     Ok((bytes.len() as u64, hex::encode(Sha256::digest(bytes))))
-}
-
-fn check_content_encoding(response: &Response<Body>) -> Result<()> {
-    if let Some(value) = response.headers().get(CONTENT_ENCODING) {
-        let coding = value
-            .to_str()
-            .map_err(|_| Error::new("Content-Encoding header is not valid text"))?
-            .trim()
-            .to_ascii_lowercase();
-        if !matches!(coding.as_str(), "identity" | "gzip" | "deflate" | "") {
-            return Err(Error::new(format!(
-                "unsupported response Content-Encoding `{coding}`"
-            )));
-        }
-    }
-    Ok(())
-}
-
-/// The response media type (type and subtype, without parameters), if present.
-fn response_media_type(response: &Response<Body>) -> Option<String> {
-    response
-        .headers()
-        .get(CONTENT_TYPE)
-        .and_then(|value| value.to_str().ok())
-        .map(|value| value.split(';').next().unwrap_or("").trim().to_owned())
-        .filter(|essence| !essence.is_empty())
 }
 
 fn write_bytes(path: &Path, bytes: &[u8]) -> Result<()> {
@@ -592,46 +541,5 @@ mod tests {
             assert!(!metadata.contains("row-count"));
             assert_eq!(std::fs::read(dir.join("results.json")).unwrap(), body);
         }
-    }
-
-    #[test]
-    fn unsupported_content_encoding_is_rejected() {
-        let with_encoding = |coding: &str| {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "text/csv")
-                .header(CONTENT_ENCODING, coding)
-                .body(Body::from(Vec::new()))
-                .unwrap()
-        };
-        assert!(check_content_encoding(&with_encoding("br")).is_err());
-        assert!(check_content_encoding(&with_encoding("gzip")).is_ok());
-        assert!(check_content_encoding(&with_encoding("identity")).is_ok());
-    }
-
-    #[test]
-    fn response_media_type_drops_parameters() {
-        assert_eq!(
-            response_media_type(&response(200, Some("Text/CSV; charset=utf-8"), b"")).as_deref(),
-            Some("Text/CSV")
-        );
-        assert_eq!(response_media_type(&response(200, None, b"")), None);
-    }
-
-    #[test]
-    fn redirect_target_requires_an_absolute_location() {
-        let redirect = |location: Option<&str>| {
-            let mut builder = Response::builder().status(StatusCode::TEMPORARY_REDIRECT);
-            if let Some(value) = location {
-                builder = builder.header(LOCATION, value);
-            }
-            builder.body(Body::from(Vec::new())).unwrap()
-        };
-        assert_eq!(
-            redirect_target(&redirect(Some("https://example.org/x")), "https://a").unwrap(),
-            "https://example.org/x"
-        );
-        assert!(redirect_target(&redirect(Some("/relative")), "https://a").is_err());
-        assert!(redirect_target(&redirect(None), "https://a").is_err());
     }
 }
