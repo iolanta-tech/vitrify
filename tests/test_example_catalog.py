@@ -70,6 +70,37 @@ class CatalogTests(CatalogFixture):
                 with self.assertRaisesRegex(ValueError, SOURCE):
                     example_catalog.load_catalog(self.root)
 
+    def test_context_command_redirects_to_a_filename(self):
+        from unittest.mock import patch
+
+        from docs_macros.request_macros import _context_section
+
+        with patch("docs_macros.request_macros.source", return_value="INCLUDED"):
+            text = _context_section(
+                "https://www.w3.org/ns/anno.jsonld",
+                "web-annotation",
+                ROOT / "docs/examples/web-annotation/2026-11-08T000000000000Z",
+                "context.jsonld",
+                None,
+                "https://github.com/iolanta-tech/vitrify",
+            )
+        command = text.split("```sh", 1)[1].split("```", 1)[0]
+        self.assertIn("> web-annotation.jsonld", command)
+        self.assertNotIn("docs/", command)
+
+    def test_context_url_is_a_context_example(self):
+        path = self.page(name="web-annotation")
+        path.write_text(
+            "---\n"
+            '"@context": urn:vitrify:examples\n'
+            "context: https://www.w3.org/ns/anno.jsonld\n"
+            "---\n"
+            "# Web Annotation\n"
+        )
+        settings = example_catalog.load_catalog(self.root)["web-annotation"]
+        self.assertEqual(settings.url, "https://www.w3.org/ns/anno.jsonld")
+        self.assertEqual(settings.endpoints, ())
+
     def test_missing_query_fails(self):
         path = self.page()
         path.write_text(
@@ -110,7 +141,39 @@ class DiscoveryTests(CatalogFixture):
         config.plugins._current_plugin = "example_site"
         config.nav = [{"Examples": ["examples/index.md"]}]
         example_site.on_config(config)
-        self.assertIn({"New example": SOURCE}, config.nav[0]["Examples"])
+        self.assertEqual(
+            config.nav[0]["Examples"][1],
+            {"SPARQL": [{"New example": SOURCE}]},
+        )
+
+    def test_context_pages_are_grouped_in_navigation(self):
+        self.page()
+        (self.root / "examples" / "annotation.md").write_text(
+            "---\n"
+            '"@context": urn:vitrify:examples\n'
+            "context: https://www.w3.org/ns/anno.jsonld\n"
+            "---\n"
+            "# Annotation\n"
+        )
+        config = load_config(
+            config_file=str(ROOT / "mkdocs.yml"), docs_dir=str(self.root)
+        )
+        config.plugins._current_plugin = "example_site"
+        config.nav = [
+            {
+                "Examples": [
+                    "examples/index.md",
+                    {"Add an example": "examples/authoring.md"},
+                ]
+            }
+        ]
+        example_site.on_config(config)
+        examples = config.nav[0]["Examples"]
+        self.assertEqual(examples[1], {"SPARQL": [{"New example": SOURCE}]})
+        self.assertEqual(
+            examples[2], {"Context": [{"Annotation": "examples/annotation.md"}]}
+        )
+        self.assertEqual(examples[3], {"Add an example": "examples/authoring.md"})
         files = Files(
             [
                 File(
