@@ -1,0 +1,31 @@
+PREFIX cwl: <https://w3id.org/cwl/cwl#>
+PREFIX cli: <urn:vitrify:cli:>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <https://schema.org/>
+
+SELECT ?usage ?required ?description WHERE {
+  GRAPH ?model {
+    ?command schema:valueName "COMMAND" ;
+      cwl:inputs ?argument .
+    ?argument cli:order ?position ;
+      cli:usage ?generatedUsage ;
+      schema:valueRequired ?required ;
+      rdfs:comment ?generatedDescription .
+    FILTER(CONTAINS(STR(?model), "cli/model.yamlld"))
+  }
+  OPTIONAL {
+    GRAPH ?hints {
+      ?argument cli:usage ?hintUsage .
+      FILTER(CONTAINS(STR(?hints), "cli/hints.yamlld"))
+    }
+  }
+  OPTIONAL {
+    GRAPH ?hints {
+      ?argument rdfs:comment ?hintDescription .
+      FILTER(CONTAINS(STR(?hints), "cli/hints.yamlld"))
+    }
+  }
+  BIND(COALESCE(?hintUsage, ?generatedUsage) AS ?usage)
+  BIND(COALESCE(?hintDescription, ?generatedDescription) AS ?description)
+}
+ORDER BY ?position
