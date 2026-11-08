@@ -30,18 +30,14 @@ def lint_python(base="HEAD", head=""):
         run_command(sys.executable, MODULE_ARGUMENT, "ruff", "check", "."),
     )
     context_status = run_command(
-        sys.executable, MODULE_ARGUMENT, "yamllint", "--strict", "docs/contexts"
+        sys.executable, MODULE_ARGUMENT, "yamllint", "--strict", "docs/contexts", "docs/cli"
     )
     violations = standalone_python_scripts()
     test_status = run_command(
         sys.executable,
         MODULE_ARGUMENT,
-        "unittest",
-        "discover",
-        "-s",
+        "pytest",
         "tests",
-        "-p",
-        "test_*.py",
     )
     changed = changed_snapshots(base, head)
     _report(violations, changed)
