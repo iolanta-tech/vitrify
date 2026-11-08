@@ -182,3 +182,35 @@
   font-weight: 700;
 }
 .md-typeset .example-endpoints + .history-detail { margin-top: 0; }
+
+.md-typeset table[data-adr-comparison] .chosen {
+  background-color: #edf7ed;
+}
+
+.md-typeset table[data-adr-comparison] .not-selected {
+  background-color: #fff8e1;
+}
+
+.md-typeset table[data-adr-comparison] .excl {
+  background-color: #fdf0ee;
+}
+
+.md-typeset table[data-adr-comparison] .excl.hot {
+  background-color: #f7d4cd;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table[data-adr-comparison] .chosen {
+  background-color: #17291e;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table[data-adr-comparison] .not-selected {
+  background-color: #332b16;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table[data-adr-comparison] .excl {
+  background-color: #261a19;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table[data-adr-comparison] .excl.hot {
+  background-color: #45231e;
+}
