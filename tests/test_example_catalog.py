@@ -168,6 +168,14 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
             assert example_history.captures(catalog_fixtures.NEW_EXAMPLE) == []
         assert not (self.root / "examples" / catalog_fixtures.NEW_EXAMPLE).exists()
 
+    def test_context_pages_include_history(self, monkeypatch):
+        config = self._grouped_config()
+        files, identifier, saved_root = _prepare_context_page(self.root)
+        with monkeypatch.context() as patch:
+            patch.setattr(example_history, "EXAMPLES_DIR", saved_root)
+            example_site.on_files(files, config)
+        _assert_context_history(files, identifier)
+
     def test_new_page_index(self):
         from docs_macros.request_macros import RequestMacros
 
@@ -199,3 +207,50 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
         ]
         example_site.on_config(config)
         return config
+
+
+def _prepare_context_page(root):
+    identifier = "2026-11-08T145518000000Z"
+    page_path = next(root.rglob("annotation.md"))
+    saved = page_path.parent / page_path.stem / identifier
+    saved.mkdir(parents=True)
+    (saved / "context.jsonld").write_text(_context_body())
+    macro = "\n{{ context_retrieval('annotation') }}\n"
+    page_path.write_text(page_path.read_text() + macro)
+    return _page_files(root, page_path), identifier, page_path.parent
+
+
+def _page_files(root, page_path):
+    source = str(root)
+    destination = str(root / "site")
+    relative = page_path.relative_to(root).as_posix()
+    return Files(
+        [
+            File(catalog_fixtures.SOURCE, source, destination, True),
+            File(relative, source, destination, True),
+        ]
+    )
+
+
+def _context_body():
+    return "".join(
+        (
+            '{"@id":"https://www.w3.org/ns/anno.jsonld",',
+            '"http://schema.org/contentSize":{"@value":"12"},',
+            '"@reverse":{"http://schema.org/result":{',
+            '"http://schema.org/actionStatus":{',
+            '"@id":"http://schema.org/CompletedActionStatus"},',
+            '"http://schema.org/startTime":{"@value":"2026-11-08T14:55:18+00:00"},',
+            '"http://schema.org/endTime":{"@value":"2026-11-08T14:55:19+00:00"}}}}',
+        )
+    )
+
+
+def _assert_context_history(files, identifier):
+    page = files.get_file_from_path("examples/annotation.md")
+    dated_path = "examples/annotation/{0}.md".format(identifier)
+    dated = files.get_file_from_path(dated_path)
+    assert "history_chart('annotation')" in page.content_string
+    assert "context_retrieval('annotation')" in page.content_string
+    assert dated is not None
+    assert "history_attempt: {0}\n".format(identifier) in dated.content_string
