@@ -1,6 +1,5 @@
 """Render current and recorded requests for embedded examples."""
 
-import re
 import shlex
 from pathlib import Path
 from textwrap import indent
@@ -11,12 +10,10 @@ from docs_macros.endpoints import default_endpoint, endpoint_url
 from docs_macros.history import captures, selected_capture
 from docs_macros.rendering.sources import source
 from docs_macros.requests import saved_request, request_notice
-from docs_macros.storage import EXAMPLES_DIR, storage_name
 from docs_macros.templates import render_jinja
 
 ATTEMPT = "history_attempt"
 ROOT_DIR = Path(__file__).resolve().parents[1]
-TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{6}(?:\d{6})?Z\Z")
 JSONLD = "context.jsonld"
 YAML = "context.yamlld"
 
@@ -71,14 +68,18 @@ class RequestMacros:
 
     def context_retrieval(self, example):
         settings = definition(example)
-        directory = _latest_context_directory(example)
+        saved = selected_capture(
+            example,
+            self.environment.page.meta.get(ATTEMPT),
+            page_endpoint(self.environment, example),
+        )
         repo_url = self.environment.conf["repo_url"]
         return "\n".join(
             _context_tab(
                 {
-                    "url": settings.url,
+                    "url": saved.endpoint or settings.url,
                     "name": settings.name,
-                    "directory": directory,
+                    "directory": saved.directory,
                     "filename": filename,
                     "flag": flag,
                     "repo_url": repo_url,
@@ -106,25 +107,6 @@ def _context_card(name, settings):
         name=name,
         url=settings.url,
     )
-
-
-def _latest_context_directory(example):
-    directory = (EXAMPLES_DIR / storage_name(example)).resolve()
-    if not directory.is_relative_to(EXAMPLES_DIR.resolve()):
-        raise ValueError(f"Invalid example directory: {example}")
-    if not directory.is_dir():
-        raise ValueError(f"No saved context retrieval for {example}")
-    saved = sorted(
-        child
-        for child in directory.iterdir()
-        if child.is_dir()
-        and TIMESTAMP.fullmatch(child.name)
-        and (child / JSONLD).is_file()
-        and (child / YAML).is_file()
-    )
-    if not saved:
-        raise ValueError(f"No saved context retrieval for {example}")
-    return saved[-1]
 
 
 def _context_tab(spec):
