@@ -3,10 +3,10 @@
 import json
 import shutil
 import tempfile
-import unittest
 from pathlib import Path
 
 from docs_macros import history as example_history
+from fixture import Fixture
 
 METADATA = "ro-crate-metadata.json"
 RESULT_FILE = "results.csv"
@@ -21,10 +21,11 @@ QLEVER = "qlever"
 EXECUTABLE_MODE = 0o755
 
 
-class HistoryFixture(unittest.TestCase):
-    def setUp(self):
+class HistoryFixture(Fixture):
+    def setup_method(self):
+        super().setup_method()
         temporary = tempfile.TemporaryDirectory(prefix="vitrify-history-test-")
-        self.addCleanup(temporary.cleanup)
+        self.add_cleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.fixture = example_history.EXAMPLES_DIR / "female-persons"
         self.baseline_files = (QUERY, RESULT_FILE, METADATA)
