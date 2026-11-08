@@ -2,7 +2,7 @@
 
 from urllib.parse import urlsplit
 
-from docs_macros.definitions import Example, FORMATS, heading
+from docs_macros.definitions import ContextExample, Example, FORMATS, heading
 
 CONTEXT = "urn:vitrify:examples"
 BINDING = "value"
@@ -15,6 +15,15 @@ def validate_definition(path, source, subjects):
     if len(subjects) != 1:
         raise ValueError(f"{path}: expected one executable definition")
     properties = next(iter(subjects.values()))
+    context_url = _context_url(properties, path)
+    if context_url is not None:
+        if "query" in properties or "endpoints" in properties:
+            raise ValueError(f"{path}: use query or context, not both")
+        return ContextExample(
+            name=path.removeprefix("examples/").removesuffix(".md"),
+            title=heading(source[0]),
+            url=context_url,
+        )
     return Example(
         name=path.removeprefix("examples/").removesuffix(".md"),
         title=heading(source[0]),
@@ -28,6 +37,15 @@ def _candidate(metadata, subjects):
     if subjects or metadata.get("@context") == CONTEXT:
         return True
     return any(key in metadata for key in ("query", "endpoints"))
+
+
+def _context_url(properties, path):
+    bindings = properties.get("context", [])
+    if not bindings:
+        return None
+    if len(bindings) != 1 or not _http_iri(bindings[0]):
+        raise ValueError(f"{path}: context must be one HTTP(S) URL")
+    return bindings[0][BINDING]
 
 
 def _endpoints(properties, path):
