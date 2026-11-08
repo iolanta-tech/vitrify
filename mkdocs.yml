@@ -50,21 +50,29 @@ plugins:
       modules: [mkdocs_macros_sparqld]
       on_error_fail: true
 
+extra:
+  sparqld:
+    directory: docs
+
 exclude_docs: |
   **/AGENTS.md
   contexts/**
+  cli/*.yamlld
 
 nav:
   - Home: index.md
-  - Examples:
-      - examples/index.md
-      - Query from a file: examples/query-from-file.md
-      - Add an example: examples/authoring.md
   - CLI:
       - cli/index.md
       - sparql: cli/sparql.md
       - context: cli/context.md
+  - Examples:
+      - examples/index.md
+      - Query from a file: examples/query-from-file.md
+      - Add an example: examples/authoring.md
   - Outputs:
       - outputs/index.md
       - RO-Crate: outputs/ro-crate/index.md
-  - roadmap.md
+  - Project:
+      - Roadmap: roadmap.md
+      - Decisions:
+          - project/decisions/parse-and-write-yaml-ld-with.md
