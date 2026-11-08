@@ -32,8 +32,21 @@ Retrieve five items classified as humans.
 
 Use a descriptive filename and one level-one heading. Keep the query complete.
 The result preview shows the first five rows. Omit `format` to let the endpoint
-choose its response type. The [CLI reference](../cli.md) lists accepted format
+choose its response type. The [sparql command](../cli/sparql.md) lists accepted format
 names.
+
+A context example records a remote JSON-LD context instead of a SPARQL query:
+
+````markdown
+---
+"@context": urn:vitrify:examples
+context: https://www.w3.org/ns/anno.jsonld
+---
+
+# Web Annotation
+````
+
+`j examples` saves `context.jsonld` and `context.yamlld` for that URL.
 
 Open a pull request that includes the new page. CI retrieves each changed
 example and saves the capture beside that page.
