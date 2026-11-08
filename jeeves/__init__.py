@@ -1,5 +1,6 @@
 """Project tasks for Vitrify. Run with `j <task>` (see https://jeeves.sh)."""
 
+from jeeves.cli_model import cli_model
 from jeeves.examples import examples
 from jeeves.fmt import fmt
 from jeeves.lint import lint
