@@ -4,6 +4,7 @@ import hashlib
 from types import MappingProxyType
 
 from docs_macros.catalog import definition
+from docs_macros.definitions import ContextExample
 
 ROUTE_HASH_LENGTH = 16
 ENDPOINTS = MappingProxyType(
@@ -36,7 +37,10 @@ def endpoint_label(url):
 
 
 def default_endpoint(example):
-    return definition(example).endpoints[0]
+    settings = definition(example)
+    if isinstance(settings, ContextExample):
+        return settings.url
+    return settings.endpoints[0]
 
 
 def retrieval_command(example, endpoint):
