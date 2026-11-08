@@ -12,7 +12,7 @@ from docs_macros.endpoints import endpoint_key
 from docs_macros.history import captures, endpoints
 from docs_macros.lifecycle import on_build_error as on_build_error
 from docs_macros.navigation import navigation
-from docs_macros.pages import example_template, generated_files
+from docs_macros.pages import context_template, example_template, generated_files
 
 
 def on_config(config):
@@ -37,10 +37,7 @@ def _render_page(files, page, example, config):
     original = files.get_file_from_path(f"examples/{page}.md")
     if original is None:
         return
-    template = _template(original, page, example)
-    if template is None:
-        return
-    _append_variants(files, page, example, template, config)
+    _append_variants(files, page, example, _template(original, page, example), config)
 
 
 def _template(original, page, example):
@@ -48,8 +45,9 @@ def _template(original, page, example):
     if page not in catalog():
         return template
     if isinstance(catalog()[page], ContextExample):
-        return None
-    rendered = example_template(template, example)
+        rendered = context_template(template, example)
+    else:
+        rendered = example_template(template, example)
     original.content_string = rendered
     return rendered
 
