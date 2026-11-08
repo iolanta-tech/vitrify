@@ -75,15 +75,11 @@ def _literal(properties, name, path, optional=False):
     bindings = properties.get(name, [])
     if optional and not bindings:
         return None
-    if len(bindings) != 1 or not _string(bindings[0]):
+    binding = bindings[0] if len(bindings) == 1 else None
+    text = binding[BINDING] if binding else ""
+    datatype = binding["datatype"] if binding and "datatype" in binding else STRING
+    if not binding or binding["type"] != "literal" or not isinstance(text, str):
         raise ValueError(f"{path}: {name} must be one nonempty string")
-    return bindings[0][BINDING]
-
-
-def _string(binding):
-    return (
-        binding["type"] == "literal"
-        and bool(binding[BINDING].strip())
-        and binding.get("datatype", STRING) == STRING
-        and "xml:lang" not in binding
-    )
+    if not text.strip() or datatype != STRING or "xml:lang" in binding:
+        raise ValueError(f"{path}: {name} must be one nonempty string")
+    return text
