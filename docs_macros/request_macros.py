@@ -74,7 +74,16 @@ class RequestMacros:
         directory = _latest_context_directory(example)
         repo_url = self.environment.conf["repo_url"]
         return "\n".join(
-            _context_tab(settings.url, settings.name, directory, filename, flag, repo_url)
+            _context_tab(
+                {
+                    "url": settings.url,
+                    "name": settings.name,
+                    "directory": directory,
+                    "filename": filename,
+                    "flag": flag,
+                    "repo_url": repo_url,
+                }
+            )
             for filename, flag in ((JSONLD, None), (YAML, "yamlld"))
         )
 
@@ -118,21 +127,23 @@ def _latest_context_directory(example):
     return saved[-1]
 
 
-def _context_tab(url, name, directory, filename, flag, repo_url):
-    label = "JSON-LD" if flag is None else "YAML-LD"
-    body = _context_section(url, name, directory, filename, flag, repo_url)
+def _context_tab(spec):
+    mode = spec["flag"]
+    label = "JSON-LD" if mode is None else "YAML-LD"
+    body = _context_section(spec)
     return f'=== "{label}"\n\n{indent(body, "    ")}'
 
 
-def _context_section(url, name, directory, filename, flag, repo_url):
-    relative = (directory / filename).relative_to(ROOT_DIR).as_posix()
-    extension = "jsonld" if flag is None else "yamlld"
-    document = source(relative, repo_url, title=filename)
+def _context_section(spec):
+    mode = spec["flag"]
+    relative = (spec["directory"] / spec["filename"]).relative_to(ROOT_DIR).as_posix()
+    extension = "jsonld" if mode is None else "yamlld"
+    document = source(relative, spec["repo_url"], title=spec["filename"])
     return render_jinja(
         "context-command.md.j2",
-        url=shlex.quote(url),
-        serialization=flag,
-        name=name,
+        url=shlex.quote(spec["url"]),
+        serialization=mode,
+        name=spec["name"],
         extension=extension,
         document=document,
     )
