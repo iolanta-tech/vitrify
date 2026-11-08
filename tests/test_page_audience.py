@@ -1,6 +1,5 @@
 """Query the audience recorded on a documentation page."""
 
-import unittest
 from pathlib import Path
 
 from docs_macros.query_files import load_query
@@ -33,9 +32,7 @@ class PageAudienceTests(CatalogFixture):
             audiences = _audience_by_document(
                 service.query(load_query("audiences.rq")),
             )
-        self.assertEqual(audiences["sparqld:examples/authoring.md"], USER)
-        self.assertEqual(audiences["sparqld:AGENTS.md"], "maintainer")
+        assert audiences["sparqld:examples/authoring.md"] == USER
+        assert audiences["sparqld:AGENTS.md"] == "maintainer"
 
 
-if __name__ == "__main__":
-    unittest.main()
