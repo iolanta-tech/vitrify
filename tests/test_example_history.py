@@ -1,6 +1,9 @@
 """Regression checks for immutable capture history and measurements."""
 
+import json
+import tempfile
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +13,7 @@ from docs_macros import history as example_history
 from docs_macros.definitions import Example
 from docs_macros.rendering import details, history
 
+from fixture import Fixture, RecordedCall
 from history_fixtures import (
     HistoryFixture,
     RESULT_FILE,
@@ -19,7 +23,6 @@ from history_fixtures import (
     WDQS,
     QLEVER,
 )
-from fixture import RecordedCall
 
 
 def _resized(capture):
@@ -154,3 +157,78 @@ class EndpointHistoryTests(HistoryFixture):
             )
             for endpoint, (_, url) in example_endpoints.ENDPOINTS.items()
         ]
+
+
+EXAMPLE = "dollar-convenience"
+CONTEXT_URL = "https://json-ld.org/contexts/{0}.jsonld".format(EXAMPLE)
+SCHEMA = "http://schema.org/"
+BODY_BYTES = 803
+MEASURED_SECONDS = 0.105
+DURATION_TOLERANCE = 0.001
+EARLIER = "2026-11-08T150000000000Z"
+LATER = "2026-11-08T160000000000Z"
+LARGER = 100
+SMALLER = 50
+
+
+class ContextHistoryTests(Fixture):
+    def setup_method(self):
+        super().setup_method()
+        temporary = tempfile.TemporaryDirectory(prefix="vitrify-context-history-")
+        self.add_cleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.add_cleanup(setattr, example_catalog.state, "definitions", None)
+        example_catalog.state.definitions = None
+
+    def test_recorded_context_capture(self):
+        directory = (
+            example_history.EXAMPLES_DIR
+            / "dollar-convenience"
+            / "2026-11-08T150831769472Z"
+        )
+        capture = example_history.read_capture(directory, directory.name)
+        assert (
+            capture.identifier,
+            capture.status,
+            capture.byte_size,
+            capture.endpoint,
+            capture.estimated_duration,
+        ) == (directory.name, "Success", BODY_BYTES, CONTEXT_URL, True)
+        assert capture.duration == pytest.approx(
+            MEASURED_SECONDS, abs=DURATION_TOLERANCE
+        )
+
+    def test_context_history_chart(self, monkeypatch):
+        self._save(EARLIER, LARGER, "2026-11-08T15:00:00+00:00")
+        self._save(LATER, SMALLER, "2026-11-08T16:00:00+00:00")
+        with monkeypatch.context() as context:
+            context.setattr(example_history, "EXAMPLES_DIR", self.root)
+            chart = history.history_chart(EXAMPLE)
+        assert "example-endpoints" not in chart
+        assert "Query endpoint" not in chart
+        assert chart.count('class="history-bar"') == len((LARGER, SMALLER))
+        for text in ("height:80.00px", "height:40.00px", "100 bytes", LATER):
+            assert text in chart
+
+    def _save(self, identifier, size, started, url=CONTEXT_URL):
+        directory = self.root / EXAMPLE / identifier
+        directory.mkdir(parents=True)
+        ended = started.replace(":00:00+", ":00:01+")
+        document = json.dumps(self._document(size, started, ended, url))
+        (directory / "context.jsonld").write_text(document)
+        (directory / "context.yamlld").write_text(document)
+
+    def _document(self, size, started, ended, url):
+        action = {
+            self._term("actionStatus"): {"@id": self._term("CompletedActionStatus")},
+            self._term("startTime"): {"@value": started},
+            self._term("endTime"): {"@value": ended},
+        }
+        return {
+            "@id": url,
+            self._term("contentSize"): {"@value": str(size)},
+            "@reverse": {self._term("result"): action},
+        }
+
+    def _term(self, name):
+        return SCHEMA + name
