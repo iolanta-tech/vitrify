@@ -16,6 +16,5 @@ planned work, not features of the current CLI, and no delivery dates are set.
 - **Additional representations:** offer optional raw-response or normalized
   graph outputs for workflows that need them.
 
-The current CLI supports SPARQL retrieval with `vitrify sparql`. See the
-[CLI](cli.md) for available options and the
-[RO-Crate output guide](outputs/ro-crate/index.md) for the RO-Crate files it writes today.
+See the [CLI](cli/index.md) for current commands and the
+[RO-Crate output guide](outputs/ro-crate/index.md) for the files `sparql` writes.
