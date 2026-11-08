@@ -4,6 +4,8 @@ import html
 
 from mkdocs.utils import get_relative_url
 
+from docs_macros.catalog import catalog
+from docs_macros.definitions import ContextExample
 from docs_macros.endpoints import default_endpoint, endpoint_key, endpoint_label
 from docs_macros.history import captures, selected_capture, endpoints
 from docs_macros.rendering import details, selection
@@ -17,9 +19,13 @@ MINIMUM_BAR_HEIGHT = 3
 def history_chart(example, attempt=None, page_url="", endpoint=None):
     endpoint = endpoint or default_endpoint(example)
     saved = captures(example, endpoint)
-    navigation = _endpoint_tabs(
-        example, _page_name(example, page_url), page_url, endpoint
-    )
+    navigation = ""
+    if not isinstance(catalog().get(example), ContextExample):
+        navigation = _endpoint_tabs(
+            example, _page_name(example, page_url), page_url, endpoint
+        )
+    if not saved and isinstance(catalog().get(example), ContextExample):
+        return "<p>No saved retrievals yet.</p>"
     if not saved:
         return f"{navigation}<p>No saved retrievals for this endpoint yet.</p>"
     selected = selected_capture(example, attempt, endpoint)
