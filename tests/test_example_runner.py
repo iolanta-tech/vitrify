@@ -165,13 +165,14 @@ class RunnerTests(HistoryFixture):
             assert len(attempts) == 4
             for attempt in attempts:
                 assert (attempt / "query.rq").read_bytes() == QUERY.encode("utf-8")
-                graph = json.loads((attempt / "ro-crate-metadata.json").read_text())[
-                    "@graph"
-                ]
-                action = next(
-                    entity for entity in graph if entity["@id"] == "#retrieval"
-                )
-                assert action["actionStatus"]["@id"].rsplit("/", 1)[-1] in {
+                assert _retrieval_status(attempt) in {
                     "FailedActionStatus",
                     "CompletedActionStatus",
                 }
+
+
+def _retrieval_status(attempt):
+    graph = json.loads((attempt / "ro-crate-metadata.json").read_text())["@graph"]
+    action = next(entity for entity in graph if entity["@id"] == "#retrieval")
+    identifier = action["actionStatus"]["@id"]
+    return identifier.rsplit("/", 1)[-1]
