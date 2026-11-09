@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-import mkdocs_macros_sparqld.server as sparqld_server
+from mkdocs_macros_sparqld import server as sparqld_server
 
 from docs_macros.discovery import EXAMPLE_CONTEXTS
 
-_state = {"original_popen": None}
+_original_popen = []
 
 
 def install():
     """Make the MkDocs sparqld process ignore example context captures."""
-    if _state["original_popen"] is not None:
+    if _original_popen:
         return
-    _state["original_popen"] = sparqld_server.subprocess.Popen
+    _original_popen.append(sparqld_server.subprocess.Popen)
     sparqld_server.subprocess.Popen = _popen
 
 
 def _popen(args, **kwargs):
-    return _state["original_popen"](_with_patterns(args), **kwargs)
+    return _original_popen[0](_with_patterns(args), **kwargs)
 
 
 def _with_patterns(args):
