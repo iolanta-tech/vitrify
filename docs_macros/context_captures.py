@@ -1,32 +1,23 @@
 """Read a saved context document as one retrieval capture."""
 
-import json
 from datetime import datetime
+from string import Template
 
 from docs_macros.captures import UTC_OFFSET, UTC_SUFFIX, Capture, timestamp_id
+from docs_macros.query_files import load_query
+from docs_macros.service import CatalogService
 
 DOCUMENT = "context.jsonld"
-SCHEMA = "http://schema.org/"
-CONTENT_SIZE = f"{SCHEMA}contentSize"
-RETRIEVAL = f"{SCHEMA}result"
-START = f"{SCHEMA}startTime"
-END = f"{SCHEMA}endTime"
-STATUS = f"{SCHEMA}actionStatus"
+GRAPH = "sparqld:context.jsonld"
 SUCCESS = "Success"
 
 
 def read_context_capture(directory, identifier=None):
-    document = json.loads((directory / DOCUMENT).read_text())
-    action = _action(document)
-    return _capture(directory, identifier, document, action)
-
-
-def _capture(directory, identifier, document, action):
-    started_text = _literal(action, START)
+    row = _row(directory)
+    started_text = _field(row, "start")
     started = _instant(started_text)
-    ended = _instant(_literal(action, END))
-    status = _status(action)
-    address = document.get("@id")
+    ended = _instant(_field(row, "end"))
+    status = _status(_field(row, "status"))
     return Capture(
         directory=directory,
         identifier=identifier or timestamp_id(started_text),
@@ -35,35 +26,30 @@ def _capture(directory, identifier, document, action):
         duration=max(0, (ended - started).total_seconds()),
         estimated_duration=True,
         error=None,
-        byte_size=_size(document, status),
-        endpoint=address if isinstance(address, str) else None,
+        byte_size=_size(row.get("size"), status),
+        endpoint=_field(row, "url"),
     )
 
 
-def _action(document):
-    reverse = document.get("@reverse")
-    action = reverse.get(RETRIEVAL) if isinstance(reverse, dict) else None
-    if not isinstance(action, dict):
-        raise ValueError(f"{document.get('@id', DOCUMENT)} has no retrieval action")
-    return action
+def _row(directory):
+    query = Template(load_query("context-capture.rq")).substitute(graph=GRAPH)
+    with CatalogService(directory) as service:
+        rows = service.query(query)
+    if not rows:
+        location = (directory / DOCUMENT).as_posix()
+        raise ValueError("No retrieval action in {0}".format(location))
+    return rows[0]
 
 
-def _literal(node, key):
-    recorded = node.get(key)
-    if isinstance(recorded, dict):
-        return recorded.get("@value")
-    return recorded
+def _field(row, name):
+    return row[name]["value"]
 
 
 def _instant(text):
-    if not isinstance(text, str):
-        raise ValueError("Context capture has no retrieval time")
     return datetime.fromisoformat(text.replace(UTC_SUFFIX, UTC_OFFSET))
 
 
-def _status(action):
-    node = action.get(STATUS) or {}
-    identifier = str(node.get("@id", ""))
+def _status(identifier):
     name = identifier.rsplit("/", 1)[-1]
     return {
         "FailedActionStatus": "Failure",
@@ -72,10 +58,10 @@ def _status(action):
     }.get(name, SUCCESS)
 
 
-def _size(document, status):
-    if status != SUCCESS:
+def _size(binding, status):
+    if status != SUCCESS or binding is None:
         return None
-    raw_size = _literal(document, CONTENT_SIZE)
+    raw_size = binding["value"]
     if isinstance(raw_size, bool) or not isinstance(raw_size, (str, int)):
         return None
     try:
