@@ -11,10 +11,9 @@ planned work, not features of the current CLI, and no delivery dates are set.
 
 - **More retrieval types:** retrieve a linked-data representation for an IRI
   and fetch an arbitrary URL as a local file.
-- **Croissant metadata:** support Croissant output alongside the current
-  [RO-Crate](https://www.researchobject.org/ro-crate/) metadata.
+- **Croissant metadata:** listed on [Outputs](outputs/index.md).
 - **Additional representations:** offer optional raw-response or normalized
   graph outputs for workflows that need them.
 
-See the [CLI](cli/index.md) for current commands and the
+See [sparql](sparql.md) and [context](context/index.md) for the current commands, and the
 [RO-Crate output guide](outputs/ro-crate/index.md) for the files `sparql` writes.
