@@ -40,5 +40,3 @@ def _rows(query):
     with CatalogService(DOCS) as service:
         payload = service.query(query)
     return [{name: row[name]["value"] for name in row} for row in payload]
-
-
