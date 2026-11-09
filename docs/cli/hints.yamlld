@@ -4,7 +4,7 @@
     summary: >-
       Send one query to a SPARQL endpoint and save the response in a directory.
     icon: database-search
-    page: sparql.md
+    page: ../sparql.md
   - $id: urn:vitrify:cli:sparql:query
     usage: --query PATH or --query -
     comment: >-
@@ -22,6 +22,6 @@
       Fetch one JSON-LD or YAML-LD context and print it with retrieval
       metadata.
     icon: code-braces
-    page: context.md
+    page: ../context/index.md
   - $id: urn:vitrify:cli:context:as
     comment: Serialization of the printed document. `jsonld` is the default.
