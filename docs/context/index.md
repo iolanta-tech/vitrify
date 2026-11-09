@@ -15,9 +15,10 @@ icon: material/code-braces
 A failed fetch, a non-success status, or a body that is not a context returns a
 nonzero exit status and prints nothing to standard output.
 
-The document keeps the fetched `@context` unchanged and uses that URL as its
-`@id`. Around it, Vitrify records the final URL, byte size, SHA-256 of the
-downloaded bytes, media type, response headers, and the time of the retrieval.
+The document keeps the fetched `@context` unchanged and has no `@id`.
+`contentUrl` is the final URL. The request records the URL that was asked for.
+Vitrify also records the byte size, SHA-256 of the downloaded bytes, media
+type, response headers, and the time of the retrieval.
 Metadata keys are absolute IRIs. Literals are JSON-LD value objects, so a
 term's type, language, and direction do not apply to them. A processor
 rejects the document when a context term maps one of those IRIs to a
