@@ -7,7 +7,7 @@ EXAMPLES = "Examples"
 
 def register_examples(entries, definitions):
     sparql, context = _groups(definitions)
-    _attach(entries, {"SPARQL": sparql, "Context": context}, None)
+    _attach(entries, {"SPARQL": sparql, "vitrify context": context}, None)
 
 
 def _attach(entries, pages, parent):
