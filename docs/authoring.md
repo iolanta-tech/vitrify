@@ -32,7 +32,7 @@ Retrieve five items classified as humans.
 
 Use a descriptive filename and one level-one heading. Keep the query complete.
 The result preview shows the first five rows. Omit `format` to let the endpoint
-choose its response type. The [sparql command](sparql.md) lists accepted format
+choose its response type. The [`vitrify sparql`](sparql.md) command lists accepted format
 names.
 
 A context example records a remote JSON-LD context instead of a SPARQL query:
