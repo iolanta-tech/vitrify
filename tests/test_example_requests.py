@@ -26,7 +26,9 @@ class RequestTests(HistoryFixture):
     def test_saved_query_and_format(self):
         capture = example_history.read_capture(self.directory())
         saved = saved_request(capture, self.settings)
-        assert saved.query.encode("utf-8") == (self.directory() / "query.rq").read_bytes()
+        assert (
+            saved.query.encode("utf-8") == (self.directory() / "query.rq").read_bytes()
+        )
         assert saved.format == "csv"
         assert "earlier query" in request_notice(capture, self.settings)
         assert request_notice(capture, saved) == ""
