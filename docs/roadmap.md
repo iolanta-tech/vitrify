@@ -15,5 +15,6 @@ planned work, not features of the current CLI, and no delivery dates are set.
 - **Additional representations:** offer optional raw-response or normalized
   graph outputs for workflows that need them.
 
-See [sparql](sparql.md) and [context](context/index.md) for the current commands, and the
-[RO-Crate output guide](outputs/ro-crate/index.md) for the files `sparql` writes.
+See [vitrify sparql](sparql.md) and [vitrify context](context/index.md) for the
+current commands, and the [RO-Crate output guide](outputs/ro-crate/index.md)
+for the files `vitrify sparql` writes.
