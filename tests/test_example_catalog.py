@@ -14,7 +14,14 @@ from docs_macros.definitions import Example
 import catalog_fixtures
 import fixture
 
-SECTION = "Examples"
+REFERENCE = "Reference"
+SPARQL = "SPARQL"
+CONTEXT = "Context"
+OUTPUTS = "outputs/index.md"
+CONTEXT_PAGE = "context/index.md"
+EXAMPLES = "Examples"
+EXAMPLES_PAGE = "examples/index.md"
+CONTEXT_EXAMPLES = "context/examples/index.md"
 
 
 class CatalogTests(catalog_fixtures.CatalogFixture):
@@ -136,17 +143,33 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
             config_file=str(catalog_fixtures.ROOT / "mkdocs.yml"), docs_dir=str(self.root)
         )
         config.plugins._current_plugin = "example_site"
-        config.nav = [{SECTION: ["examples/index.md"]}]
+        sparql = {SPARQL: [{"Outputs": [OUTPUTS]}, {EXAMPLES: [EXAMPLES_PAGE]}]}
+        context = {CONTEXT: [CONTEXT_PAGE, {EXAMPLES: [CONTEXT_EXAMPLES]}]}
+        config.nav = [{REFERENCE: [sparql, context]}]
         example_site.on_config(config)
-        expected = {"SPARQL": [{"New example": catalog_fixtures.SOURCE}]}
-        assert config.nav[0][SECTION][1] == expected
+        reference = config.nav[0][REFERENCE]
+        sparql = reference[0][SPARQL]
+        registered = sparql[1][EXAMPLES]
+        context = reference[1][CONTEXT]
+        assert sparql[0] == {"Outputs": [OUTPUTS]}
+        assert registered[0] == EXAMPLES_PAGE
+        assert registered[1] == {"New example": catalog_fixtures.SOURCE}
+        assert context[1][EXAMPLES] == [CONTEXT_EXAMPLES]
 
     def test_context_pages_are_grouped_in_navigation(self):
         config = self._grouped_config()
-        examples = config.nav[0][SECTION]
-        assert examples[1] == {"SPARQL": [{"New example": catalog_fixtures.SOURCE}]}
-        assert examples[2] == {"Context": [{"Annotation": "examples/annotation.md"}]}
-        assert examples[3] == {"Add an example": "examples/authoring.md"}
+        reference = config.nav[0][REFERENCE]
+        sparql = reference[0][SPARQL]
+        registered = sparql[1][EXAMPLES]
+        context = reference[1][CONTEXT]
+        assert sparql[0] == OUTPUTS
+        assert registered[:2] == [EXAMPLES_PAGE, {"New example": catalog_fixtures.SOURCE}]
+        assert context[0] == CONTEXT_PAGE
+        assert context[1][EXAMPLES][:2] == [
+            CONTEXT_EXAMPLES,
+            {"Annotation": "examples/annotation.md"},
+        ]
+        assert reference[2] == {"Add an example": "authoring.md"}
 
     def test_context_pages_skip_variant_files(self, monkeypatch):
         config = self._grouped_config()
@@ -199,11 +222,12 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
         config.plugins._current_plugin = "example_site"
         config.nav = [
             {
-                SECTION: [
-                    "examples/index.md",
-                    {"Add an example": "examples/authoring.md"},
-                ]
-            }
+                REFERENCE: [
+                    {SPARQL: [OUTPUTS, {EXAMPLES: [EXAMPLES_PAGE]}]},
+                    {CONTEXT: [CONTEXT_PAGE, {EXAMPLES: [CONTEXT_EXAMPLES]}]},
+                    {"Add an example": "authoring.md"},
+                ],
+            },
         ]
         example_site.on_config(config)
         return config
