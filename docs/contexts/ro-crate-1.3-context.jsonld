@@ -1,5 +1,12 @@
 {
      "@id": "https://w3id.org/ro/crate/1.3/context",
+     "@type": [
+          "http://schema.org/MediaObject",
+          "http://www.w3.org/ns/json-ld#Context"
+     ],
+     "http://schema.org/contentUrl": {
+          "@id": "https://w3id.org/ro/crate/1.3/context"
+     },
      "name": [
           "RO-Crate JSON-LD Context"
      ],
