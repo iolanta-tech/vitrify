@@ -32,7 +32,7 @@ Retrieve five items classified as humans.
 
 Use a descriptive filename and one level-one heading. Keep the query complete.
 The result preview shows the first five rows. Omit `format` to let the endpoint
-choose its response type. The [sparql command](../cli/sparql.md) lists accepted format
+choose its response type. The [sparql command](sparql.md) lists accepted format
 names.
 
 A context example records a remote JSON-LD context instead of a SPARQL query:
@@ -46,14 +46,4 @@ context: https://www.w3.org/ns/anno.jsonld
 # Web Annotation
 ````
 
-`j examples` saves `context.jsonld` and `context.yamlld` for that URL.
-
-Open a pull request that includes the new page. CI retrieves each changed
-example and saves the capture beside that page.
-
-Each capture is a new timestamped directory beside its example. A failed
-retrieval stays in the history. Requests keep the CLI's 120-second timeout and
-1 GiB response limit.
-
-Keep the page filename when you want to retain its captures. When renaming a
-page, move its capture directory and preserve published routes.
+Open a pull request that includes the new page.
