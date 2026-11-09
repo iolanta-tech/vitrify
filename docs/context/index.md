@@ -1,5 +1,6 @@
 ---
 icon: material/code-braces
+hide: [toc]
 ---
 
 # :material-code-braces: vitrify context
