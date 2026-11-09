@@ -108,7 +108,9 @@ class RunnerTests(HistoryFixture):
         with monkeypatch.context() as context:
             context.setattr(example_runner, "_validate", RecordedCall(False))
             with contextlib.redirect_stdout(io.StringIO()):
-                failed = example_runner.run_examples({settings.name: settings}, self.root)
+                failed = example_runner.run_examples(
+                    {settings.name: settings}, self.root
+                )
         assert not failed
         captures = list((self.root / settings.name).iterdir())
         assert len(captures) == 2
@@ -129,7 +131,9 @@ class RunnerTests(HistoryFixture):
         with monkeypatch.context() as context:
             context.setattr(example_runner, "_validate", RecordedCall(False))
             with contextlib.redirect_stdout(io.StringIO()):
-                assert not example_runner.run_examples({settings.name: settings}, self.root)
+                assert not example_runner.run_examples(
+                    {settings.name: settings}, self.root
+                )
         attempts = list((self.root / settings.name).iterdir())
         assert len(attempts) == 1
 
@@ -167,7 +171,7 @@ class RunnerTests(HistoryFixture):
                 action = next(
                     entity for entity in graph if entity["@id"] == "#retrieval"
                 )
-                assert (
-                    action["actionStatus"]["@id"].rsplit("/", 1)[-1]
-                    in {"FailedActionStatus", "CompletedActionStatus"}
-                )
+                assert action["actionStatus"]["@id"].rsplit("/", 1)[-1] in {
+                    "FailedActionStatus",
+                    "CompletedActionStatus",
+                }
