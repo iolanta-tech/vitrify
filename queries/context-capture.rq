@@ -1,0 +1,13 @@
+PREFIX schema: <http://schema.org/>
+
+SELECT ?url ?size ?start ?end ?status WHERE {
+  GRAPH <${graph}> {
+    ?copy schema:contentUrl ?url .
+    ?action schema:result ?copy ;
+            schema:startTime ?start ;
+            schema:endTime ?end ;
+            schema:actionStatus ?status .
+    OPTIONAL { ?copy schema:contentSize ?size }
+  }
+}
+LIMIT 1
