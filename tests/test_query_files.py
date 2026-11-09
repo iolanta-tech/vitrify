@@ -21,4 +21,6 @@ class QueryFileTests:
                 assert query_files.load_query(source.name) == "ASK {}\n"
                 source.write_text("SELECT ?s WHERE { ?s ?p ?o }\n", encoding="utf-8")
                 os.utime(source, ns=(SECOND_REVISION, SECOND_REVISION))
-                assert query_files.load_query(source.name) == source.read_text(encoding="utf-8")
+                assert query_files.load_query(source.name) == source.read_text(
+                    encoding="utf-8"
+                )
