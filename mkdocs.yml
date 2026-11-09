@@ -72,7 +72,7 @@ nav:
           - Examples:
               - examples/index.md
               - Query from a file: examples/query-from-file.md
-      - Context:
+      - vitrify context:
           - context/index.md
           - Examples:
               - context/examples/index.md
