@@ -379,7 +379,8 @@ fn context_prints_jsonld_with_the_request_accept_and_digest() {
     let document: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(document["@context"]["@vocab"], "http://example.org/");
     assert_eq!(document["@context"]["z"], "http://z.example/");
-    assert_eq!(document["@id"], url);
+    assert!(document.get("@id").is_none());
+    assert_eq!(document["http://schema.org/contentUrl"]["@id"], url);
     assert_eq!(
         document["http://schema.org/sha256"]["@value"],
         hex::encode(Sha256::digest(CONTEXT_BODY))
@@ -458,10 +459,15 @@ fn context_follows_a_redirect_and_records_both_urls() {
     assert_eq!(seen[1].path, "/final.jsonld");
     drop(seen);
     let document: Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(document["@id"], requested);
+    assert!(document.get("@id").is_none());
     assert_eq!(
         document["http://schema.org/contentUrl"]["@id"],
         format!("{}/final.jsonld", running.base_url)
+    );
+    assert_eq!(
+        document["@reverse"]["http://schema.org/result"]["http://schema.org/object"]
+            ["http://www.w3.org/2011/http#absoluteURI"]["@value"],
+        requested
     );
 }
 
