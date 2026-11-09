@@ -28,9 +28,7 @@ def adr_metadata(date, status, prerequisite=None):
     prerequisite_part = _prerequisite(prerequisite)
     if prerequisite_part:
         parts.append(prerequisite_part)
-    kind = (
-        ADR_STATUS_ADMONITION[key] if key in ADR_STATUS_ADMONITION else "note"
-    )
+    kind = ADR_STATUS_ADMONITION[key] if key in ADR_STATUS_ADMONITION else "note"
     title = " · ".join(parts)
     return f'!!! {kind} "{title}"\n'
 
@@ -44,7 +42,7 @@ def _label(status, key):
 
 def _human_date(raw):
     parsed = date_type.fromisoformat(raw) if isinstance(raw, str) else raw
-    return f'{parsed.day} {parsed.strftime("%B %Y")}'
+    return f"{parsed.day} {parsed.strftime('%B %Y')}"
 
 
 def _prerequisite(entry):
