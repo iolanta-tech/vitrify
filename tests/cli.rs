@@ -465,8 +465,8 @@ fn context_follows_a_redirect_and_records_both_urls() {
         format!("{}/final.jsonld", running.base_url)
     );
     assert_eq!(
-        document["@reverse"]["http://schema.org/result"]["http://schema.org/object"]
-            ["http://www.w3.org/2011/http#absoluteURI"]["@value"],
+        document["@reverse"]["http://schema.org/result"]["http://schema.org/object"]["http://www.w3.org/2011/http#absoluteURI"]
+            ["@value"],
         requested
     );
 }
