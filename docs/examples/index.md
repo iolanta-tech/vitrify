@@ -1,5 +1,6 @@
 ---
 icon: material/book-open-variant
+hide: [toc]
 ---
 
 # :material-book-open-variant: Examples
