@@ -1,6 +1,5 @@
 """Bound rendered results while retaining access to complete artifacts."""
 
-
 from docs_macros.rendering.files import _result_code
 from docs_macros.rendering.tables import csv_table
 
