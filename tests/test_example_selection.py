@@ -13,6 +13,7 @@ class SelectionTests:
         paths = [
             f"docs/examples/{PAGE}.md",
             "docs/examples/authoring.md",
+            "docs/authoring.md",
             "docs/examples/index.md",
             "docs/examples/query-from-file.md",
             f"docs/examples/{PAGE}/2026-10-31T000000Z/query.rq",
