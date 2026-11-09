@@ -32,3 +32,6 @@ def _with_patterns(args):
         prefixed.extend(("--pattern", pattern))
     prefixed.append("--no-watch")
     return prefixed
+
+
+install()
