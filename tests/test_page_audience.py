@@ -23,7 +23,7 @@ class PageAudienceTests(CatalogFixture):
     def test_guide_page_is_for_the_user(self):
         project = Path(__file__).resolve().parents[1]
         (self.root / "examples" / "authoring.md").write_text(
-            (project / "docs/examples/authoring.md").read_text(encoding="utf-8")
+            (project / "docs/authoring.md").read_text(encoding="utf-8")
         )
         (self.root / "AGENTS.md").write_text(
             (project / "docs/AGENTS.md").read_text(encoding="utf-8")
