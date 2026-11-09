@@ -26,11 +26,19 @@ CONTEXT_EXAMPLES = "context/examples/index.md"
 
 class CatalogTests(catalog_fixtures.CatalogFixture):
     def test_registered_context_and_implicit_identity(self):
-        self.page(endpoints=[catalog_fixtures.ENDPOINT, "https://another.example/sparql", catalog_fixtures.ENDPOINT])
+        self.page(
+            endpoints=[
+                catalog_fixtures.ENDPOINT,
+                "https://another.example/sparql",
+                catalog_fixtures.ENDPOINT,
+            ]
+        )
         settings = example_catalog.load_catalog(self.root)[catalog_fixtures.NEW_EXAMPLE]
         assert settings.query == catalog_fixtures.QUERY
         assert settings.format is None
-        assert settings.endpoints == tuple(sorted({catalog_fixtures.ENDPOINT, "https://another.example/sparql"}))
+        assert settings.endpoints == tuple(
+            sorted({catalog_fixtures.ENDPOINT, "https://another.example/sparql"})
+        )
         assert "--format" not in settings.arguments(catalog_fixtures.ENDPOINT)
 
     def test_migrated_definitions(self):
@@ -46,7 +54,9 @@ class CatalogTests(catalog_fixtures.CatalogFixture):
         }
         assert migrated <= definitions.keys()
         assert "query-from-file" not in definitions
-        assert fixture.search(r"(?i)\bLIMIT\s+5\s*$", definitions["select-turtle"].query)
+        assert fixture.search(
+            r"(?i)\bLIMIT\s+5\s*$", definitions["select-turtle"].query
+        )
         for name in migrated - {"select-turtle"}:
             settings = definitions[name]
             assert fixture.search(r"(?i)\bLIMIT\s+\d+", settings.query) is None
@@ -115,10 +125,18 @@ class CatalogTests(catalog_fixtures.CatalogFixture):
             example_catalog.load_catalog(self.root)
 
     def test_multiple_definitions_fail(self):
-        metadata = {"@graph": [{catalog_fixtures.QUERY_PROPERTY: "ASK {}", catalog_fixtures.ENDPOINTS: [catalog_fixtures.ENDPOINT]}]}
+        metadata = {
+            "@graph": [
+                {
+                    catalog_fixtures.QUERY_PROPERTY: "ASK {}",
+                    catalog_fixtures.ENDPOINTS: [catalog_fixtures.ENDPOINT],
+                }
+            ]
+        }
         self.page(**metadata)
         with pytest.raises(ValueError, match="one executable definition"):
             example_catalog.load_catalog(self.root)
+
 
 class LoaderTests(catalog_fixtures.CatalogFixture):
     def test_loader_errors_fail(self):
@@ -131,7 +149,9 @@ class LoaderTests(catalog_fixtures.CatalogFixture):
 class DiscoveryTests(catalog_fixtures.CatalogFixture):
     def test_command_query_bytes(self):
         for query in (catalog_fixtures.QUERY, catalog_fixtures.QUERY.rstrip("\n")):
-            settings = Example("example", "Example", query, (catalog_fixtures.ENDPOINT,))
+            settings = Example(
+                "example", "Example", query, (catalog_fixtures.ENDPOINT,)
+            )
             command = settings.command(catalog_fixtures.ENDPOINT)
             command = command.split(" |\n", 1)[0]
             completed = sh.sh("-c", command, _decode=False, _return_cmd=True)
@@ -140,7 +160,8 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
     def test_new_page_registration(self):
         self.page()
         config = load_config(
-            config_file=str(catalog_fixtures.ROOT / "mkdocs.yml"), docs_dir=str(self.root)
+            config_file=str(catalog_fixtures.ROOT / "mkdocs.yml"),
+            docs_dir=str(self.root),
         )
         config.plugins._current_plugin = "example_site"
         sparql = {SPARQL: [{"Outputs": [OUTPUTS]}, {EXAMPLES: [EXAMPLES_PAGE]}]}
@@ -163,7 +184,10 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
         registered = sparql[1][EXAMPLES]
         context = reference[1][CONTEXT]
         assert sparql[0] == OUTPUTS
-        assert registered[:2] == [EXAMPLES_PAGE, {"New example": catalog_fixtures.SOURCE}]
+        assert registered[:2] == [
+            EXAMPLES_PAGE,
+            {"New example": catalog_fixtures.SOURCE},
+        ]
         assert context[0] == CONTEXT_PAGE
         assert context[1][EXAMPLES][:2] == [
             CONTEXT_EXAMPLES,
@@ -186,7 +210,10 @@ class DiscoveryTests(catalog_fixtures.CatalogFixture):
         with monkeypatch.context() as context:
             context.setattr(example_history, "EXAMPLES_DIR", self.root / "examples")
             example_site.on_files(files, config)
-            assert "retrieval_command('new-example')" in files.get_file_from_path(catalog_fixtures.SOURCE).content_string
+            assert (
+                "retrieval_command('new-example')"
+                in files.get_file_from_path(catalog_fixtures.SOURCE).content_string
+            )
             assert len(files) == 2
             assert example_history.captures(catalog_fixtures.NEW_EXAMPLE) == []
         assert not (self.root / "examples" / catalog_fixtures.NEW_EXAMPLE).exists()
