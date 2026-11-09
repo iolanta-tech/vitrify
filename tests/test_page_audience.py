@@ -34,5 +34,3 @@ class PageAudienceTests(CatalogFixture):
             )
         assert audiences["sparqld:examples/authoring.md"] == USER
         assert audiences["sparqld:AGENTS.md"] == "maintainer"
-
-
