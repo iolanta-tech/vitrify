@@ -6,20 +6,19 @@ import mkdocs_macros_sparqld.server as sparqld_server
 
 from docs_macros.discovery import EXAMPLE_CONTEXTS
 
-_original_popen = None
+_state = {"original_popen": None}
 
 
 def install():
     """Make the MkDocs sparqld process ignore example context captures."""
-    global _original_popen
-    if _original_popen is not None:
+    if _state["original_popen"] is not None:
         return
-    _original_popen = sparqld_server.subprocess.Popen
+    _state["original_popen"] = sparqld_server.subprocess.Popen
     sparqld_server.subprocess.Popen = _popen
 
 
 def _popen(args, **kwargs):
-    return _original_popen(_with_patterns(args), **kwargs)
+    return _state["original_popen"](_with_patterns(args), **kwargs)
 
 
 def _with_patterns(args):
