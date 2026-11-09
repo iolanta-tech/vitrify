@@ -9,7 +9,7 @@ Prefer deterministic checks enforced by `j lint` and CI over prompting agents
 with rules that can be checked automatically.
 
 For CLI commands, arguments, and output behavior, start with
-`docs/cli/index.md` and `docs/outputs/ro-crate/index.md`.
+`docs/sparql.md`, `docs/context/index.md`, and `docs/outputs/ro-crate/index.md`.
 
 A documented Vitrify retrieval is an example under `docs/examples`. Let `j examples`
 save and refresh its captures. Do not add a one-off output file for the documentation.
