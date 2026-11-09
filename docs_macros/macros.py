@@ -2,6 +2,8 @@
 
 from textwrap import indent
 
+from docs_macros.adr import adr_metadata
+from docs_macros.cli_page import cli_arguments, cli_commands
 from docs_macros.request_macros import RequestMacros, page_endpoint
 from docs_macros.rendering.details import capture_detail as capture_detail
 from docs_macros.rendering.directories import directory_preview
@@ -16,6 +18,8 @@ MACROS = (
     "query_endpoint",
     "query_text",
     "examples_index",
+    "context_examples_index",
+    "context_retrieval",
     "capture_notice",
     "file_tabs",
     "source",
@@ -74,4 +78,7 @@ def define_env(env):
     bound = ExampleMacros(env)
     for name in MACROS:
         env.macro(getattr(bound, name), name)
+    env.macro(cli_arguments, "cli_arguments")
+    env.macro(cli_commands, "cli_commands")
+    env.macro(adr_metadata, "adr_metadata")
     env.filter(_add_indentation, "add_indentation")

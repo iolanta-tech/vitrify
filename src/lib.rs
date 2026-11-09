@@ -1,12 +1,16 @@
-//! Vitrify turns one SPARQL retrieval into a durable local file.
-//!
-//! Executes one query against an endpoint and saves the response body in an
-//! output directory alongside its RO-Crate.
+//! Vitrify records one remote retrieval with metadata and provenance.
 
+mod cli;
+mod context;
 mod error;
+mod http;
 mod retrieve;
 mod rocrate;
 mod sparql;
+mod yaml;
+
+pub use cli::{execute, model as cli_model};
+pub use context::{OutputFormat, context};
 
 use std::fs;
 use std::path::Path;

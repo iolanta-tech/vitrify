@@ -7,37 +7,19 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY))
 
 from docs_macros.catalog import catalog, configure_catalog
-from docs_macros.definitions import plain_title
+from docs_macros.definitions import ContextExample
 from docs_macros.endpoints import endpoint_key
 from docs_macros.history import captures, endpoints
-from docs_macros.pages import generated_files, example_template
 from docs_macros.lifecycle import on_build_error as on_build_error
+from docs_macros.navigation import register_examples
+from docs_macros.pages import context_template, example_template, generated_files
 
 
 def on_config(config):
     """Discover pages before MkDocs creates navigation and renders macros."""
     definitions = configure_catalog(Path(config.docs_dir))
-    for entry in config.nav:
-        if isinstance(entry, dict) and "Examples" in entry:
-            entry["Examples"] = _navigation(entry["Examples"], definitions)
+    register_examples(config.nav, definitions)
     return config
-
-
-def _navigation(existing, definitions):
-    supporting = [page for page in existing if not _executable_nav(page, definitions)]
-    executable = [
-        {plain_title(settings.title): f"examples/{name}.md"}
-        for name, settings in definitions.items()
-    ]
-    return [supporting[0], *executable, *supporting[1:]]
-
-
-def _executable_nav(page, definitions):
-    if isinstance(page, dict):
-        page = next(iter(page.values()))
-    path = page
-    name = path.removeprefix("examples/").removesuffix(".md")
-    return name in definitions
 
 
 def on_files(files, config):
@@ -45,15 +27,27 @@ def on_files(files, config):
     pages = {name: name for name in catalog()}
     pages["query-from-file"] = "eu-capitals"
     for page, example in pages.items():
-        original = files.get_file_from_path(f"examples/{page}.md")
-        if original is None:
-            continue
-        template = original.content_string
-        if page in catalog():
-            template = example_template(template, example)
-            original.content_string = template
-        _append_variants(files, page, example, template, config)
+        _render_page(files, page, example, config)
     return files
+
+
+def _render_page(files, page, example, config):
+    original = files.get_file_from_path(f"examples/{page}.md")
+    if original is None:
+        return
+    _append_variants(files, page, example, _template(original, page, example), config)
+
+
+def _template(original, page, example):
+    template = original.content_string
+    if page not in catalog():
+        return template
+    if isinstance(catalog()[page], ContextExample):
+        rendered = context_template(template, example)
+    else:
+        rendered = example_template(template, example)
+    original.content_string = rendered
+    return rendered
 
 
 def _variants(example):

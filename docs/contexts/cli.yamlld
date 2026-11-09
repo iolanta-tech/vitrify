@@ -1,0 +1,27 @@
+"@context":
+  - https://json-ld.org/contexts/dollar-convenience.jsonld
+  - cwl: https://w3id.org/cwl/cwl#
+    name: https://schema.org/valueName
+    inputs:
+      "@id": cwl:inputs
+    inputBinding:
+      "@id": cwl:inputBinding
+    prefix:
+      "@id": cwl:CommandLineBinding/prefix
+    valueRequired:
+      "@id": https://schema.org/valueRequired
+      "@type": http://www.w3.org/2001/XMLSchema#boolean
+    comment:
+      "@id": http://www.w3.org/2000/01/rdf-schema#comment
+    usage: urn:vitrify:cli:usage
+    order:
+      "@id": urn:vitrify:cli:order
+      "@type": http://www.w3.org/2001/XMLSchema#integer
+    summary: urn:vitrify:cli:summary
+    icon: urn:vitrify:cli:icon
+    page: urn:vitrify:cli:page
+    context-file:
+      "@id": https://sparqld.iolanta.tech/context-file
+      "@type": "@id"
+$id: urn:vitrify:cli
+context-file: cli.yamlld

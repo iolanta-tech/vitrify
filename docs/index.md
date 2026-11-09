@@ -65,3 +65,5 @@ history_endpoint: https://query.wikidata.org/sparql
 ```sh
 cargo install vitrify
 ```
+
+See [Installation](installation.md) for the Rust version this command needs.

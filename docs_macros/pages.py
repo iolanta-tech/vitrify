@@ -13,6 +13,16 @@ def example_template(source, example):
     return f"{source.rstrip()}\n\n{layout}"
 
 
+def context_template(source, example):
+    chart = "{{{{ history_chart('{0}') }}}}".format(example)
+    retrieval = "{{{{ context_retrieval('{0}') }}}}".format(example)
+    if "history_chart(" in source:
+        return source
+    if retrieval in source:
+        return source.replace(retrieval, "{0}\n\n{1}".format(chart, retrieval), 1)
+    return "{0}\n\n{1}\n".format(source.rstrip(), chart)
+
+
 def render_page(template, path, endpoint, identifier):
     depth = path.count("/") + 1
     adjusted = re.sub(

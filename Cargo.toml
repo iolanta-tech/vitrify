@@ -1,6 +1,6 @@
 [package]
 name = "vitrify"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0 OR MIT"
@@ -15,7 +15,8 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
 hex = "0.4"
 phf = { version = "0.11", features = ["macros"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+saphyr = "0.3"
 sha2 = "0.11"
 oxhttp = { version = "0.3", default-features = false, features = [
     "client",

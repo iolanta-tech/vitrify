@@ -22,6 +22,7 @@ theme:
     accent: cyan
   features:
     - navigation.tabs
+    - navigation.sections
     - navigation.indexes
     - content.code.copy
 
@@ -50,18 +51,33 @@ plugins:
       modules: [mkdocs_macros_sparqld]
       on_error_fail: true
 
+extra:
+  sparqld:
+    directory: docs
+
 exclude_docs: |
   **/AGENTS.md
   contexts/**
+  cli/*.yamlld
 
 nav:
   - Home: index.md
-  - Examples:
-      - examples/index.md
-      - Query from a file: examples/query-from-file.md
-      - Add an example: examples/authoring.md
-  - cli.md
-  - Outputs:
-      - outputs/index.md
-      - RO-Crate: outputs/ro-crate/index.md
-  - roadmap.md
+  - Reference:
+      - Installation: installation.md
+      - SPARQL:
+          - sparql.md
+          - Outputs:
+              - outputs/index.md
+              - RO-Crate: outputs/ro-crate/index.md
+          - Examples:
+              - examples/index.md
+              - Query from a file: examples/query-from-file.md
+      - vitrify context:
+          - context/index.md
+          - Examples:
+              - context/examples/index.md
+      - Add an example: authoring.md
+  - Project:
+      - Roadmap: roadmap.md
+      - Decisions:
+          - project/decisions/parse-and-write-yaml-ld-with.md

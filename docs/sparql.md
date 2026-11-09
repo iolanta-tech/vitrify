@@ -1,12 +1,11 @@
 ---
-icon: material/console
-hide: [navigation, toc]
+icon: material/database-search
 ---
 
-# :material-console: CLI
+# :material-database-search: vitrify sparql
 
-Vitrify currently provides the `sparql` command only. It sends one query to a SPARQL
-endpoint and saves the response body in an output directory.
+`vitrify sparql` sends one query to a SPARQL endpoint and saves the response
+body in an output directory.
 
 ```sh
 vitrify sparql \
@@ -18,18 +17,13 @@ vitrify sparql \
 
 ## :material-format-list-bulleted: Arguments
 
-| Argument | Required | Description |
-| --- | --- | --- |
-| `--endpoint IRI` | Yes | SPARQL endpoint URL. |
-| `--query PATH` or `--query -` | Yes | Read the query from a UTF-8 file, or read standard input when the value is `-`. |
-| `--to DIRECTORY` | Yes | Directory for the result and its [RO-Crate](https://www.researchobject.org/ro-crate/) files. |
-| `--format FORMAT` | No | Request a response format; also supplies a fallback filename extension. |
+{{ cli_arguments('sparql') }}
 
 The query must not be empty. Standard input is read only when `--query -` is
 specified. Vitrify saves the query text it sends as `query.rq` in the output
 directory.
 
-## :material-file-document-multiple: Formats
+## :material-file-document-multiple: Formats { #formats }
 
 | `--format` | Requested media type | Fallback extension |
 | --- | --- | --- |

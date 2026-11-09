@@ -11,12 +11,11 @@ from pathlib import Path
 import rich
 import sh
 
+from docs_macros.definitions import ContextExample
 from docs_macros.endpoints import endpoint_label
 from docs_macros.storage import storage_name
 
-PROFILE = "ro-crate-1.3"
 TRANSIENT_HTTP_STATUSES = frozenset((429, 504))
-HTTP_STATUS_PREFIX = "HTTP "
 RETRIEVAL_ID = "#retrieval"
 MINIMUM_EXIT_CODE = -128
 MAXIMUM_EXIT_CODE = 256
@@ -27,20 +26,22 @@ PROJECT_DIR = Path(__file__).resolve().parents[1]
 def run_examples(examples, directory):
     failed = False
     for example in examples.values():
+        saved = directory / storage_name(example.name)
+        if isinstance(example, ContextExample):
+            failed |= _retrieve_context(example, saved)
+            continue
         for endpoint in example.endpoints:
-            failed |= _retrieve(
-                example, endpoint, directory / storage_name(example.name)
-            )
+            failed |= _retrieve(example, endpoint, saved)
     return failed
 
 
 def _environment():
+    path_key = "PATH"
     local_binary = PROJECT_DIR / "target" / "debug" / "vitrify"
     environment = os.environ.copy()
     if local_binary.is_file():
-        environment["PATH"] = os.pathsep.join(
-            (str(local_binary.parent), environment.get("PATH", ""))
-        )
+        current = environment[path_key] if path_key in environment else ""
+        environment[path_key] = os.pathsep.join((str(local_binary.parent), current))
     return environment
 
 
@@ -73,7 +74,36 @@ def _retrieve(example, endpoint, directory):
     )
 
 
-def _destination(directory):
+def _retrieve_context(example, directory):
+    rich.print(f"[b]{example.name}[/b]: fetching {example.url}…")
+    with tempfile.TemporaryDirectory(prefix="vitrify-context-") as temporary:
+        (Path(temporary) / example.name).mkdir()
+        for filename, extra in (
+            ("context.jsonld", []),
+            ("context.yamlld", ["--as", "yamlld"]),
+        ):
+            with (Path(temporary) / example.name / filename).open("wb") as stdout:
+                completed = sh.Command(
+                    "vitrify", search_paths=_environment()["PATH"].split(os.pathsep)
+                )(
+                    "context",
+                    example.url,
+                    *extra,
+                    _cwd=temporary,
+                    _env=_environment(),
+                    _out=stdout,
+                    _err=sys.stderr,
+                    _ok_code=PROCESS_EXIT_CODES,
+                    _return_cmd=True,
+                )
+            if completed.exit_code != 0:
+                rich.print(f"[red]{example.name}: context retrieval failed[/red]")
+                return True
+        _save_capture(Path(temporary) / example.name, directory)
+    return False
+
+
+def _save_capture(output, directory):
     directory.mkdir(parents=True, exist_ok=True)
     while True:
         destination = directory / datetime.now(timezone.utc).strftime(
@@ -83,11 +113,7 @@ def _destination(directory):
             destination.mkdir()
         except FileExistsError:
             continue
-        return destination
-
-
-def _save_capture(output, directory):
-    destination = _destination(directory)
+        break
     with tempfile.TemporaryDirectory(prefix=".pending-", dir=directory) as staging:
         shutil.copytree(output, staging, dirs_exist_ok=True)
         os.replace(staging, destination)
@@ -99,21 +125,23 @@ def _http_status(destination):
     action = next(
         entity for entity in document["@graph"] if entity.get("@id") == RETRIEVAL_ID
     )
-    description = action.get("description", "")
-    if not description.startswith(HTTP_STATUS_PREFIX):
+    description = action["description"] if "description" in action else ""
+    prefix = "HTTP "
+    if not description.startswith(prefix):
         return None
-    number = description.removeprefix(HTTP_STATUS_PREFIX).split(";", 1)[0]
+    number = description.removeprefix(prefix).split(";", 1)[0]
     if not number.isdecimal():
         return None
     return int(number)
 
 
 def _validate(name, destination):
-    rich.print(f"[b]{name}[/b]: validating {PROFILE}…")
+    profile = "ro-crate-1.3"
+    rich.print(f"[b]{name}[/b]: validating {profile}…")
     validation = sh.Command("rocrate-validator")(
         "validate",
         "-p",
-        PROFILE,
+        profile,
         str(destination),
         _out=sys.stdout,
         _err=sys.stderr,

@@ -15,6 +15,7 @@ dependencies = [
     "mkdocs-macros-plugin>=1.5.0",
     "mkdocs-macros-sparqld>=0.2.0",
     "pymdown-extensions>=10.0",
+    "pytest>=8.4",
     "roc-validator>=0.13.0",
     "ruff>=0.17.1,<0.18",
     "sh>=2.0",
@@ -36,3 +37,9 @@ select = ["TID251"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "yaml".msg = "Use a YAML 1.2 parser instead of PyYAML."
+"subprocess".msg = "Use sh instead of subprocess."
+"unittest".msg = "Use pytest instead of unittest."
+
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
+python_classes = ["*Tests"]

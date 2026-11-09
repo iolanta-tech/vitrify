@@ -1,0 +1,27 @@
+"@context": urn:vitrify:cli
+"@graph":
+  - $id: urn:vitrify:cli:sparql
+    summary: >-
+      Send one query to a SPARQL endpoint and save the response in a directory.
+    icon: database-search
+    page: ../sparql.md
+  - $id: urn:vitrify:cli:sparql:query
+    usage: --query PATH or --query -
+    comment: >-
+      Read the query from a UTF-8 file, or read standard input when the value
+      is `-`.
+  - $id: urn:vitrify:cli:sparql:to
+    comment: >-
+      Directory for the result and its
+      [RO-Crate](https://www.researchobject.org/ro-crate/) files.
+  - $id: urn:vitrify:cli:sparql:format
+    comment: >-
+      Request a response format; also supplies a fallback filename extension.
+  - $id: urn:vitrify:cli:context
+    summary: >-
+      Fetch one JSON-LD or YAML-LD context and print it with retrieval
+      metadata.
+    icon: code-braces
+    page: ../context/index.md
+  - $id: urn:vitrify:cli:context:as
+    comment: Serialization of the printed document. `jsonld` is the default.

@@ -21,4 +21,4 @@ examples use `printf` and standard input to keep their commands self-contained.
 
 </div>
 
-[Add an example](authoring.md).
+[Add an example](../authoring.md).

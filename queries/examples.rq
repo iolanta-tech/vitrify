@@ -5,17 +5,17 @@ SELECT ?page ?definition ?property ?value WHERE {
   {
     GRAPH ?page {
       ?definition ?candidate ?anything .
-      VALUES ?candidate { example:query example:endpoints }
+      VALUES ?candidate { example:query example:endpoints example:context }
       ?definition ?property ?value .
-      VALUES ?property { example:query example:endpoints example:format }
+      VALUES ?property { example:query example:endpoints example:format example:context }
     }
   } UNION {
     GRAPH <sparqld:> { ?page sd:namedGraph/sd:name ?graph }
     GRAPH ?graph {
       ?definition ?candidate ?anything .
-      VALUES ?candidate { example:query example:endpoints }
+      VALUES ?candidate { example:query example:endpoints example:context }
       ?definition ?property ?value .
-      VALUES ?property { example:query example:endpoints example:format }
+      VALUES ?property { example:query example:endpoints example:format example:context }
     }
   }
   FILTER(STRSTARTS(STR(?page), "sparqld:examples/"))

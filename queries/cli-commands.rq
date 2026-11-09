@@ -1,0 +1,19 @@
+PREFIX cwl: <https://w3id.org/cwl/cwl#>
+PREFIX cli: <urn:vitrify:cli:>
+PREFIX schema: <https://schema.org/>
+
+SELECT ?name ?summary ?icon ?page WHERE {
+  GRAPH ?model {
+    ?command a cwl:CommandLineTool ;
+      schema:valueName ?name ;
+      cli:order ?position .
+    FILTER(CONTAINS(STR(?model), "cli/model.yamlld"))
+  }
+  GRAPH ?hints {
+    ?command cli:summary ?summary ;
+      cli:icon ?icon ;
+      cli:page ?page .
+    FILTER(CONTAINS(STR(?hints), "cli/hints.yamlld"))
+  }
+}
+ORDER BY ?position

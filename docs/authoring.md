@@ -32,15 +32,18 @@ Retrieve five items classified as humans.
 
 Use a descriptive filename and one level-one heading. Keep the query complete.
 The result preview shows the first five rows. Omit `format` to let the endpoint
-choose its response type. The [CLI reference](../cli.md) lists accepted format
+choose its response type. The [`vitrify sparql`](sparql.md) command lists accepted format
 names.
 
-Open a pull request that includes the new page. CI retrieves each changed
-example and saves the capture beside that page.
+A context example records a remote JSON-LD context instead of a SPARQL query:
 
-Each capture is a new timestamped directory beside its example. A failed
-retrieval stays in the history. Requests keep the CLI's 120-second timeout and
-1 GiB response limit.
+````markdown
+---
+"@context": urn:vitrify:examples
+context: https://www.w3.org/ns/anno.jsonld
+---
 
-Keep the page filename when you want to retain its captures. When renaming a
-page, move its capture directory and preserve published routes.
+# Web Annotation
+````
+
+Open a pull request that includes the new page.

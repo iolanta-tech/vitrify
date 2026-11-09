@@ -6,6 +6,9 @@
       "@type": "@id"
       "@container": "@set"
     format: urn:vitrify:vocabulary:format
+    context:
+      "@id": urn:vitrify:vocabulary:context
+      "@type": "@id"
     context-file:
       "@id": https://sparqld.iolanta.tech/context-file
       "@type": "@id"

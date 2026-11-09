@@ -14,10 +14,7 @@ female-persons/
   ro-crate-metadata.json
 ```
 
-`results.<extension>` is the ordinary response body, stored unchanged. Its
-extension comes from a recognized response `Content-Type`. If that media type
-is missing or unrecognized, Vitrify falls back to `--format`, then to `.dat`
-when no format was requested.
+The result file name follows the [format rules](../../sparql.md#formats).
 
 `query.rq` contains the exact query text sent to the endpoint. It is included
 even when the query was read from standard input.
@@ -30,9 +27,6 @@ status, final URL, requested `Accept` value when one was sent, and retrieval
 times. The retrieval action has a completed or failed status. Linked `PropertyValue`
 entities record retrieval duration in seconds. Duration covers the
 request, redirects, and response download; it excludes final metadata writing.
-
-The result media type describes the received response and can differ
-from the requested format.
 
 The root dataset's license text says that Vitrify does not assert a license
 for retrieved data. Check the source endpoint's terms before reusing that data.
@@ -72,17 +66,3 @@ size; bar height represents the saved response size in bytes. Duration appears b
 bar. Older captures use estimated durations derived from their recorded
 timestamps, marked with `≈`.
 
-From the repository root, with the project environment activated, append a new
-capture for every example on its configured endpoints:
-
-```sh
-cargo build
-j examples
-```
-
-The runner uses the local debug build when available, otherwise `vitrify` from
-`PATH`. It discovers Markdown-LD example pages and runs their endpoint variants sequentially in temporary directories and saves
-Vitrify's output in new timestamped directories. Earlier captures stay intact.
-It continues after individual failures, validates saved crates against RO-Crate
-1.3, and exits nonzero if any retrieval or validation failed. Validation results
-appear in the terminal. Documentation builds read saved captures.

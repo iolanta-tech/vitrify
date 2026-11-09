@@ -1,9 +1,10 @@
 """Verify concurrent checks finish and preserve failures."""
 
 import sys
-import unittest
 from functools import partial
 from threading import Barrier, Event
+
+import pytest
 
 from project_checks.commands import run_command, run_parallel
 
@@ -27,26 +28,26 @@ def _finish_check(barrier, finished):
     return 0
 
 
-class ParallelCheckTests(unittest.TestCase):
+class ParallelCheckTests:
     def test_checks_overlap_and_preserve_failure(self):
         barrier = Barrier(2)
         status = run_parallel(
             partial(_check, barrier, 0), partial(_check, barrier, FAILURE_STATUS)
         )
-        self.assertEqual(status, FAILURE_STATUS)
+        assert status == FAILURE_STATUS
 
     def test_exception_waits_for_other_check(self):
         barrier = Barrier(2)
         finished = Event()
-        with self.assertRaisesRegex(ValueError, "check failed"):
+        with pytest.raises(ValueError, match="check failed"):
             run_parallel(
                 partial(_raise_check, barrier),
                 partial(_finish_check, barrier, finished),
             )
-        self.assertTrue(finished.is_set())
+        assert finished.is_set()
 
     def test_command_preserves_cargo_failure_status(self):
         status = run_command(
             sys.executable, "-c", f"raise SystemExit({FAILURE_STATUS})"
         )
-        self.assertEqual(status, FAILURE_STATUS)
+        assert status == FAILURE_STATUS

@@ -21,6 +21,16 @@ FORMATS = MappingProxyType(
 
 
 @dataclass(frozen=True)
+class ContextExample:
+    """One context page and the remote context document it retrieves."""
+
+    name: str
+    title: str
+    url: str
+    endpoints: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class Example:
     """One page and its future retrieval requests."""
 

@@ -3,10 +3,10 @@
 import json
 import shutil
 import tempfile
-import unittest
 from pathlib import Path
 
 from docs_macros import catalog as example_catalog
+from fixture import Fixture
 
 ROOT = Path(__file__).resolve().parents[1]
 ENDPOINT = "https://example.org/sparql"
@@ -20,14 +20,15 @@ QUERY = "{query}\n".format(
 )
 
 
-class CatalogFixture(unittest.TestCase):
-    def setUp(self):
+class CatalogFixture(Fixture):
+    def setup_method(self):
+        super().setup_method()
         self.temporary = tempfile.TemporaryDirectory(prefix="vitrify-catalog-test-")
-        self.addCleanup(self.temporary.cleanup)
+        self.add_cleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         (self.root / EXAMPLES).mkdir()
         shutil.copytree(ROOT / "docs" / "contexts", self.root / "contexts")
-        self.addCleanup(setattr, example_catalog.state, "definitions", None)
+        self.add_cleanup(setattr, example_catalog.state, "definitions", None)
 
     def page(self, name=NEW_EXAMPLE, **metadata):
         document = {

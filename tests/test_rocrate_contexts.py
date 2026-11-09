@@ -30,7 +30,7 @@ class CrateContextTests(CatalogFixture):
                 "SELECT DISTINCT ?profile WHERE { "
                 "?metadata <http://purl.org/dc/terms/conformsTo> ?profile }"
             )
-        self.assertEqual(
-            {row["profile"]["value"] for row in rows},
-            {"https://w3id.org/ro/crate/1.2", "https://w3id.org/ro/crate/1.3"},
-        )
+        assert ({row["profile"]["value"] for row in rows}) == {
+            "https://w3id.org/ro/crate/1.2",
+            "https://w3id.org/ro/crate/1.3",
+        }
