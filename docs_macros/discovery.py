@@ -10,6 +10,10 @@ from docs_macros.query_files import load_query
 
 VOCABULARY = "urn:vitrify:vocabulary:"
 BINDING = "value"
+EXAMPLE_CONTEXTS = (
+    "!examples/**/context.jsonld",
+    "!examples/**/context.yamlld",
+)
 
 
 def sources(directory):
@@ -36,7 +40,7 @@ def read_source(path):
 
 
 def discover(directory):
-    with CatalogService(directory) as service:
+    with CatalogService(directory, EXAMPLE_CONTEXTS) as service:
         _check_errors(service.query(load_query("load-errors.rq")), directory)
         return _group(service.query(load_query("examples.rq")))
 
