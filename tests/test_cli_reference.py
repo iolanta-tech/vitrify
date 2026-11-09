@@ -26,8 +26,8 @@ class CliReferenceTests:
 
     def test_command_cards_come_from_the_model(self):
         cards = command_cards(_rows(load_query("cli-commands.rq")))
-        assert "**[sparql](sparql.md)**" in cards
-        assert "**[context](context.md)**" in cards
+        assert "**[sparql](../sparql.md)**" in cards
+        assert "**[context](../context/index.md)**" in cards
         assert cards.index("sparql") < cards.index("context")
 
 
