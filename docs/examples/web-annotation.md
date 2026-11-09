@@ -1,6 +1,7 @@
 ---
 "@context": urn:vitrify:examples
 context: https://www.w3.org/ns/anno.jsonld
+hide: [toc]
 ---
 
 # :material-code-braces: Web Annotation
