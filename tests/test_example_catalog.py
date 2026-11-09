@@ -16,7 +16,7 @@ import fixture
 
 REFERENCE = "Reference"
 SPARQL = "SPARQL"
-CONTEXT = "Context"
+CONTEXT = "vitrify context"
 OUTPUTS = "outputs/index.md"
 CONTEXT_PAGE = "context/index.md"
 EXAMPLES = "Examples"
@@ -259,7 +259,7 @@ def _page_files(root, page_path):
 def _context_body():
     return "".join(
         (
-            '{"@id":"https://www.w3.org/ns/anno.jsonld",',
+            '{"http://schema.org/contentUrl":{"@id":"https://www.w3.org/ns/anno.jsonld"},',
             '"http://schema.org/contentSize":{"@value":"12"},',
             '"@reverse":{"http://schema.org/result":{',
             '"http://schema.org/actionStatus":{',
