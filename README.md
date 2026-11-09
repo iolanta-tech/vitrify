@@ -45,5 +45,5 @@ Bratislava
 Brussels
 ```
 
-See the [CLI reference](https://vitrify.iolanta.tech/cli/) for options and the
+See [sparql](https://vitrify.iolanta.tech/sparql/) and [context](https://vitrify.iolanta.tech/context/) for the commands, and the
 [roadmap](https://vitrify.iolanta.tech/roadmap/) for planned work.
