@@ -34,4 +34,6 @@ def _with_patterns(args):
     return prefixed
 
 
-install()
+def define_env(env):
+    """MkDocs-macros pluglet entry: install exclusions before sparqld starts."""
+    install()
