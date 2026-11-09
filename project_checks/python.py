@@ -30,7 +30,12 @@ def lint_python(base="HEAD", head=""):
         run_command(sys.executable, MODULE_ARGUMENT, "ruff", "check", "."),
     )
     context_status = run_command(
-        sys.executable, MODULE_ARGUMENT, "yamllint", "--strict", "docs/contexts", "docs/cli"
+        sys.executable,
+        MODULE_ARGUMENT,
+        "yamllint",
+        "--strict",
+        "docs/contexts",
+        "docs/cli",
     )
     violations = standalone_python_scripts()
     test_status = run_command(
