@@ -1,7 +1,7 @@
 //! Fetch one JSON-LD or YAML-LD context and describe the retrieval.
 
 use chrono::{DateTime, Utc};
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
 use crate::error::{Error, Result};
@@ -215,99 +215,114 @@ fn references_remote(context: &Value) -> bool {
 }
 
 fn build_document(context: &Value, provenance: &Provenance) -> Result<Value> {
-    let mut document = Map::new();
-    document.insert("@context".to_owned(), context.clone());
-    document.insert("@id".to_owned(), json!(provenance.requested_url));
-    document.insert("@type".to_owned(), json!([MEDIA_OBJECT, JSONLD_CONTEXT]));
-    document.insert(CONTENT_URL.to_owned(), json!({"@id": provenance.final_url}));
-    document.insert(
-        CONTENT_SIZE.to_owned(),
-        literal(json!(provenance.body.len().to_string())),
-    );
-    if let Some(media_type) = &provenance.media_type {
-        document.insert(ENCODING_FORMAT.to_owned(), literal(json!(media_type)));
-    }
-    document.insert(
-        SHA256.to_owned(),
-        literal(json!(hex::encode(Sha256::digest(&provenance.body)))),
-    );
-    let mut reverse = Map::new();
-    reverse.insert(RESULT.to_owned(), action_node(provenance));
-    document.insert("@reverse".to_owned(), Value::Object(reverse));
-    Ok(Value::Object(document))
+    let media_type = provenance
+        .media_type
+        .as_ref()
+        .map(|media_type| (ENCODING_FORMAT.to_owned(), literal(json!(media_type))));
+    Ok(object(
+        [
+            ("@context".to_owned(), context.clone()),
+            ("@type".to_owned(), json!([MEDIA_OBJECT, JSONLD_CONTEXT])),
+            (CONTENT_URL.to_owned(), json!({"@id": provenance.final_url})),
+            (
+                CONTENT_SIZE.to_owned(),
+                literal(json!(provenance.body.len().to_string())),
+            ),
+            (
+                SHA256.to_owned(),
+                literal(json!(hex::encode(Sha256::digest(&provenance.body)))),
+            ),
+            (
+                "@reverse".to_owned(),
+                object([(RESULT.to_owned(), action_node(provenance))]),
+            ),
+        ]
+        .into_iter()
+        .chain(media_type),
+    ))
 }
 
 fn action_node(provenance: &Provenance) -> Value {
-    let mut node = Map::new();
-    node.insert("@type".to_owned(), json!(CREATE_ACTION));
-    node.insert(ACTION_STATUS.to_owned(), json!({"@id": COMPLETED}));
-    node.insert(START_TIME.to_owned(), datetime(provenance.started));
-    node.insert(END_TIME.to_owned(), datetime(provenance.ended));
-    node.insert(INSTRUMENT.to_owned(), instrument_node());
-    node.insert(
-        OBJECT.to_owned(),
-        request_node(
-            &provenance.final_url,
-            provenance.status,
-            &provenance.headers,
+    object([
+        ("@type".to_owned(), json!(CREATE_ACTION)),
+        (ACTION_STATUS.to_owned(), json!({"@id": COMPLETED})),
+        (START_TIME.to_owned(), datetime(provenance.started)),
+        (END_TIME.to_owned(), datetime(provenance.ended)),
+        (INSTRUMENT.to_owned(), instrument_node()),
+        (
+            OBJECT.to_owned(),
+            request_node(
+                &provenance.requested_url,
+                provenance.status,
+                &provenance.headers,
+            ),
         ),
-    );
-    Value::Object(node)
+    ])
 }
 
 fn instrument_node() -> Value {
-    let mut node = Map::new();
-    node.insert("@id".to_owned(), json!(VITRIFY));
-    node.insert("@type".to_owned(), json!(SOFTWARE));
-    node.insert(
-        VERSION.to_owned(),
-        literal(json!(env!("CARGO_PKG_VERSION"))),
-    );
-    Value::Object(node)
+    object([
+        ("@id".to_owned(), json!(VITRIFY)),
+        ("@type".to_owned(), json!(SOFTWARE)),
+        (
+            VERSION.to_owned(),
+            literal(json!(env!("CARGO_PKG_VERSION"))),
+        ),
+    ])
 }
 
 fn request_node(final_url: &str, status: u16, headers: &[(String, String)]) -> Value {
-    let mut node = Map::new();
-    node.insert("@type".to_owned(), json!(HTTP_REQUEST));
-    node.insert(METHOD_NAME.to_owned(), literal(json!("GET")));
-    node.insert(ABSOLUTE_URI.to_owned(), literal(json!(final_url)));
-    node.insert(RESP.to_owned(), response_node(status, headers));
-    Value::Object(node)
+    object([
+        ("@type".to_owned(), json!(HTTP_REQUEST)),
+        (METHOD_NAME.to_owned(), literal(json!("GET"))),
+        (ABSOLUTE_URI.to_owned(), literal(json!(final_url))),
+        (RESP.to_owned(), response_node(status, headers)),
+    ])
 }
 
 fn response_node(status: u16, headers: &[(String, String)]) -> Value {
-    let mut node = Map::new();
-    node.insert("@type".to_owned(), json!(HTTP_RESPONSE));
-    node.insert(STATUS_CODE.to_owned(), literal(json!(status)));
-    if !headers.is_empty() {
-        let fields = headers
-            .iter()
-            .map(|(name, value)| header_node(name, value))
-            .collect();
-        node.insert(HEADERS.to_owned(), Value::Array(fields));
-    }
-    Value::Object(node)
+    let header_fields = (!headers.is_empty()).then(|| {
+        (
+            HEADERS.to_owned(),
+            Value::Array(
+                headers
+                    .iter()
+                    .map(|(name, value)| header_node(name, value))
+                    .collect(),
+            ),
+        )
+    });
+    object(
+        [
+            ("@type".to_owned(), json!(HTTP_RESPONSE)),
+            (STATUS_CODE.to_owned(), literal(json!(status))),
+        ]
+        .into_iter()
+        .chain(header_fields),
+    )
 }
 
 fn header_node(name: &str, value: &str) -> Value {
-    let mut node = Map::new();
-    node.insert("@type".to_owned(), json!(HTTP_HEADER));
-    node.insert(FIELD_NAME.to_owned(), literal(json!(name)));
-    node.insert(FIELD_VALUE.to_owned(), literal(json!(value)));
-    Value::Object(node)
+    object([
+        ("@type".to_owned(), json!(HTTP_HEADER)),
+        (FIELD_NAME.to_owned(), literal(json!(name))),
+        (FIELD_VALUE.to_owned(), literal(json!(value))),
+    ])
 }
 
 fn literal(value: Value) -> Value {
-    let mut node = Map::new();
-    node.insert("@value".to_owned(), value);
-    Value::Object(node)
+    object([("@value".to_owned(), value)])
 }
 
 fn datetime(value: DateTime<Utc>) -> Value {
-    let mut node = Map::new();
-    node.insert("@value".to_owned(), json!(value.to_rfc3339()));
-    node.insert("@type".to_owned(), json!(XSD_DATE_TIME));
-    Value::Object(node)
+    object([
+        ("@value".to_owned(), json!(value.to_rfc3339())),
+        ("@type".to_owned(), json!(XSD_DATE_TIME)),
+    ])
+}
+
+fn object(entries: impl IntoIterator<Item = (String, Value)>) -> Value {
+    Value::Object(entries.into_iter().collect())
 }
 
 fn serialize(document: &Value, format: OutputFormat) -> Result<String> {
@@ -400,10 +415,14 @@ mod tests {
             .collect();
         assert_eq!(keys, ["z", "a"]);
         assert!(document.get("extra").is_none());
-        assert_eq!(document["@id"], "https://example.org/start.jsonld");
+        assert!(document.get("@id").is_none());
         assert_eq!(
             document[CONTENT_URL]["@id"],
             "https://example.org/final.jsonld"
+        );
+        assert_eq!(
+            document["@reverse"][RESULT][OBJECT][ABSOLUTE_URI]["@value"],
+            "https://example.org/start.jsonld"
         );
     }
 
