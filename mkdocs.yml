@@ -22,6 +22,7 @@ theme:
     accent: cyan
   features:
     - navigation.tabs
+    - navigation.sections
     - navigation.indexes
     - content.code.copy
 
@@ -61,17 +62,21 @@ exclude_docs: |
 
 nav:
   - Home: index.md
-  - CLI:
-      - cli/index.md
-      - sparql: cli/sparql.md
-      - context: cli/context.md
-  - Examples:
-      - examples/index.md
-      - Query from a file: examples/query-from-file.md
-      - Add an example: examples/authoring.md
-  - Outputs:
-      - outputs/index.md
-      - RO-Crate: outputs/ro-crate/index.md
+  - Reference:
+      - Installation: installation.md
+      - SPARQL:
+          - sparql.md
+          - Outputs:
+              - outputs/index.md
+              - RO-Crate: outputs/ro-crate/index.md
+          - Examples:
+              - examples/index.md
+              - Query from a file: examples/query-from-file.md
+      - Context:
+          - context/index.md
+          - Examples:
+              - context/examples/index.md
+      - Add an example: authoring.md
   - Project:
       - Roadmap: roadmap.md
       - Decisions:
