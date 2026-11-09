@@ -2,9 +2,11 @@
 icon: material/code-braces
 ---
 
-# :material-code-braces: context
+# :material-code-braces: vitrify context
 
-`context` GETs one absolute HTTP(S) URL. The [dollar-convenience context](../examples/dollar-convenience.md) is a small example.
+`vitrify context` GETs one absolute HTTP(S) URL. The
+[dollar-convenience context](../examples/dollar-convenience.md) is a small
+example.
 
 {{ context_retrieval('dollar-convenience') }}
 
