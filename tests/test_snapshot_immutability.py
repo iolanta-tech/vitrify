@@ -156,7 +156,11 @@ class LocalSnapshotTests(SnapshotRepository):
         self.write("main_guard.py", 'if __name__ == "__main__":\n    pass\n')
         self.write("reverse_guard.py", 'if "__main__" == __name__:\n    pass\n')
         self.write("shebang.py", "#!/usr/bin/env python3\n")
-        assert standalone_python_scripts(self.repository) == ["main_guard.py", "reverse_guard.py", "shebang.py"]
+        assert standalone_python_scripts(self.repository) == [
+            "main_guard.py",
+            "reverse_guard.py",
+            "shebang.py",
+        ]
 
     def test_allows_tasks_modules_and_tests(self):
         self.write("jeeves.py", "def lint():\n    pass\n")
@@ -174,4 +178,3 @@ class GitPagerTests(SnapshotRepository):
         monkeypatch.setenv("TERM", "xterm")
         changed = changed_snapshots(self.base, repository=self.repository)
         assert changed == [name]
-
