@@ -2,10 +2,10 @@
 icon: material/database-search
 ---
 
-# :material-database-search: sparql
+# :material-database-search: vitrify sparql
 
-`sparql` sends one query to a SPARQL endpoint and saves the response body in an
-output directory.
+`vitrify sparql` sends one query to a SPARQL endpoint and saves the response
+body in an output directory.
 
 ```sh
 vitrify sparql \
