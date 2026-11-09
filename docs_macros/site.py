@@ -11,16 +11,14 @@ from docs_macros.definitions import ContextExample
 from docs_macros.endpoints import endpoint_key
 from docs_macros.history import captures, endpoints
 from docs_macros.lifecycle import on_build_error as on_build_error
-from docs_macros.navigation import navigation
+from docs_macros.navigation import register_examples
 from docs_macros.pages import context_template, example_template, generated_files
 
 
 def on_config(config):
     """Discover pages before MkDocs creates navigation and renders macros."""
     definitions = configure_catalog(Path(config.docs_dir))
-    for entry in config.nav:
-        if isinstance(entry, dict) and "Examples" in entry:
-            entry["Examples"] = navigation(entry["Examples"], definitions)
+    register_examples(config.nav, definitions)
     return config
 
 
