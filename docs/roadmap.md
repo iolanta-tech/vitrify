@@ -1,5 +1,6 @@
 ---
 icon: material/map
+hide: [toc]
 ---
 
 # :material-map: Roadmap
