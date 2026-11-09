@@ -23,7 +23,7 @@ The query must not be empty. Standard input is read only when `--query -` is
 specified. Vitrify saves the query text it sends as `query.rq` in the output
 directory.
 
-## :material-file-document-multiple: Formats
+## :material-file-document-multiple: Formats { #formats }
 
 | `--format` | Requested media type | Fallback extension |
 | --- | --- | --- |
@@ -48,5 +48,5 @@ not guarantee the endpoint returns that media type; use the recorded
 `Content-Type` to identify the response.
 
 A non-success HTTP response returns a nonzero exit status and saves the failed
-retrieval in the [RO-Crate metadata](../outputs/ro-crate/index.md), including its
+retrieval in the [RO-Crate metadata](outputs/ro-crate/index.md), including its
 error and duration.
