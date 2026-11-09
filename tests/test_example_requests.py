@@ -131,7 +131,7 @@ class ContextRequestTests(HistoryFixture):
             term("endTime"): {"@value": ended},
         }
         document = {
-            "@id": CONTEXT_URL,
+            term("contentUrl"): {"@id": CONTEXT_URL},
             term("contentSize"): {"@value": "12"},
             "@reverse": {term("result"): action},
         }
