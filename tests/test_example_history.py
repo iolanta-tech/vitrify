@@ -55,7 +55,10 @@ class HistoryTests(HistoryFixture):
             assert len(captures) == 2
             assert captures[0].byte_size == len(before[RESULT_FILE])
             self._assert_failure(latest)
-            assert example_history.selected_capture(PRIMARY, captures[0].identifier) == captures[0]
+            assert (
+                example_history.selected_capture(PRIMARY, captures[0].identifier)
+                == captures[0]
+            )
         assert before == self.baseline_bytes()
 
     def test_byte_sizes_and_flattened_duration(self):
@@ -121,7 +124,10 @@ class EndpointHistoryTests(HistoryFixture):
                 example_history.selected_capture(PRIMARY, endpoint=WDQS)
             newer = self.newer_capture(example_endpoints.ENDPOINTS[WDQS][1])
             self._assert_endpoint_counts(1, 1)
-            assert example_history.selected_capture(PRIMARY, endpoint=WDQS).directory == newer
+            assert (
+                example_history.selected_capture(PRIMARY, endpoint=WDQS).directory
+                == newer
+            )
             self._remove_publisher(newer)
             assert not example_history.captures(PRIMARY, WDQS)
 
