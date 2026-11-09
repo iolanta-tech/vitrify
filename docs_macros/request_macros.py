@@ -105,7 +105,6 @@ def _context_card(name, settings):
         "context-card.md.j2",
         title=plain_title(settings.title),
         name=name,
-        url=settings.url,
     )
 
 
