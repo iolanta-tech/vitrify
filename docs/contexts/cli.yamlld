@@ -20,8 +20,11 @@
     summary: urn:vitrify:cli:summary
     icon: urn:vitrify:cli:icon
     page: urn:vitrify:cli:page
-    context-file:
-      "@id": https://sparqld.iolanta.tech/context-file
+    contentUrl:
+      "@id": http://schema.org/contentUrl
       "@type": "@id"
 $id: urn:vitrify:cli
-context-file: cli.yamlld
+$type:
+  - http://schema.org/MediaObject
+  - http://www.w3.org/ns/json-ld#Context
+contentUrl: urn:vitrify:cli

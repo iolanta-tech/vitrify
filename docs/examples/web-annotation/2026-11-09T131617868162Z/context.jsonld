@@ -249,9 +249,6 @@
   "http://schema.org/contentSize": {
     "@value": "5932"
   },
-  "http://schema.org/encodingFormat": {
-    "@value": "application/ld+json"
-  },
   "http://schema.org/sha256": {
     "@value": "c10fd886c5c726fbfd51747b8677eb8f7d02c039357269622de7382e5c20d410"
   },
@@ -262,11 +259,11 @@
         "@id": "http://schema.org/CompletedActionStatus"
       },
       "http://schema.org/startTime": {
-        "@value": "2026-11-09T07:52:32.373362457+00:00",
+        "@value": "2026-11-09T13:16:17.375366731+00:00",
         "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
       },
       "http://schema.org/endTime": {
-        "@value": "2026-11-09T07:52:32.609588460+00:00",
+        "@value": "2026-11-09T13:16:17.602411788+00:00",
         "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
       },
       "http://schema.org/instrument": {
@@ -332,12 +329,15 @@
                 "@value": "date"
               },
               "http://www.w3.org/2011/http#fieldValue": {
-                "@value": "Mon, 09 Nov 2026 07:52:32 GMT"
+                "@value": "Mon, 09 Nov 2026 13:16:17 GMT"
               }
             }
           ]
         }
       }
     }
+  },
+  "http://schema.org/encodingFormat": {
+    "@value": "application/ld+json"
   }
 }

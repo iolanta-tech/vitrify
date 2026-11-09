@@ -29,8 +29,12 @@
   $value: "@value"
   $version: "@version"
   $vocab: "@vocab"
-  context-file:
-    "@id": https://sparqld.iolanta.tech/context-file
+  contentUrl:
+    "@id": http://schema.org/contentUrl
     "@type": "@id"
 $id: https://json-ld.org/contexts/dollar-convenience.jsonld
-context-file: dollar-convenience.yamlld
+$type:
+  - http://schema.org/MediaObject
+  - http://www.w3.org/ns/json-ld#Context
+contentUrl: https://json-ld.org/contexts/dollar-convenience.jsonld
+

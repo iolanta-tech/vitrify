@@ -1,5 +1,6 @@
 ---
 icon: material/package-variant-closed
+hide: [toc]
 ---
 
 # :material-package-variant-closed: RO-Crate

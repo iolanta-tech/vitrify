@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from docs_macros.cli_page import argument_table, command_cards
+from docs_macros.discovery import EXAMPLE_CONTEXTS
 from docs_macros.query_files import load_query
 from docs_macros.service import CatalogService
 
@@ -37,6 +38,6 @@ def _table(name, command):
 
 
 def _rows(query):
-    with CatalogService(DOCS) as service:
+    with CatalogService(DOCS, EXAMPLE_CONTEXTS) as service:
         payload = service.query(query)
     return [{name: row[name]["value"] for name in row} for row in payload]

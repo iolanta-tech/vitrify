@@ -6137,8 +6137,6 @@
   "@id": "https://schema.org/docs/jsonldcontext.json"
 "http://schema.org/contentSize":
   "@value": "210636"
-"http://schema.org/encodingFormat":
-  "@value": application/ld+json
 "http://schema.org/sha256":
   "@value": 65d0c5d17def9b171b7697bb0929eed17aa32f19af539e15302b6c20479b8930
 "@reverse":
@@ -6147,10 +6145,10 @@
     "http://schema.org/actionStatus":
       "@id": "http://schema.org/CompletedActionStatus"
     "http://schema.org/startTime":
-      "@value": "2026-11-09T07:52:31.917071274+00:00"
+      "@value": "2026-11-09T13:16:16.923576507+00:00"
       "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
     "http://schema.org/endTime":
-      "@value": "2026-11-09T07:52:32.307340406+00:00"
+      "@value": "2026-11-09T13:16:17.287820868+00:00"
       "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
     "http://schema.org/instrument":
       "@id": "https://vitrify.iolanta.tech"
@@ -6187,9 +6185,11 @@
             "http://www.w3.org/2011/http#fieldName":
               "@value": expires
             "http://www.w3.org/2011/http#fieldValue":
-              "@value": "Mon, 09 Nov 2026 08:01:34 GMT"
+              "@value": "Mon, 09 Nov 2026 13:25:50 GMT"
           - "@type": "http://www.w3.org/2011/http#ResponseHeader"
             "http://www.w3.org/2011/http#fieldName":
               "@value": date
             "http://www.w3.org/2011/http#fieldValue":
-              "@value": "Mon, 09 Nov 2026 07:51:34 GMT"
+              "@value": "Mon, 09 Nov 2026 13:15:50 GMT"
+"http://schema.org/encodingFormat":
+  "@value": application/ld+json

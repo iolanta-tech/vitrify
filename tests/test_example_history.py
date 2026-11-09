@@ -169,8 +169,9 @@ EXAMPLE = "dollar-convenience"
 CONTEXT_URL = "https://json-ld.org/contexts/{0}.jsonld".format(EXAMPLE)
 SCHEMA = "http://schema.org/"
 BODY_BYTES = 803
-MEASURED_SECONDS = 0.094461
+MEASURED_SECONDS = 0.275334
 DURATION_TOLERANCE = 0.001
+RECORDED_CONTEXT_CAPTURE = "2026-11-09T131616266342Z"
 EARLIER = "2026-11-08T150000000000Z"
 LATER = "2026-11-08T160000000000Z"
 LARGER = 100
@@ -190,7 +191,7 @@ class ContextHistoryTests(Fixture):
         directory = (
             example_history.EXAMPLES_DIR
             / "dollar-convenience"
-            / "2026-11-09T075231394815Z"
+            / RECORDED_CONTEXT_CAPTURE
         )
         capture = example_history.read_capture(directory, directory.name)
         assert (

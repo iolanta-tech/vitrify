@@ -1,6 +1,7 @@
 ---
 "@context": urn:vitrify:examples
 context: https://schema.org/docs/jsonldcontext.json
+hide: [toc]
 ---
 
 # :material-code-braces: Schema.org context

@@ -45,10 +45,10 @@
     "http://schema.org/actionStatus":
       "@id": "http://schema.org/CompletedActionStatus"
     "http://schema.org/startTime":
-      "@value": "2026-11-09T10:55:48.187446728+00:00"
+      "@value": "2026-11-09T16:58:28.157950202+00:00"
       "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
     "http://schema.org/endTime":
-      "@value": "2026-11-09T10:55:48.341260290+00:00"
+      "@value": "2026-11-09T16:58:28.355473526+00:00"
       "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
     "http://schema.org/instrument":
       "@id": "https://vitrify.iolanta.tech"
@@ -85,6 +85,6 @@
             "http://www.w3.org/2011/http#fieldName":
               "@value": date
             "http://www.w3.org/2011/http#fieldValue":
-              "@value": "Mon, 09 Nov 2026 10:55:48 GMT"
+              "@value": "Mon, 09 Nov 2026 16:58:28 GMT"
 "http://schema.org/encodingFormat":
   "@value": application/ld+json

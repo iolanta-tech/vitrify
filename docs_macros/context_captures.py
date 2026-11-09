@@ -10,6 +10,7 @@ from docs_macros.service import CatalogService
 DOCUMENT = "context.jsonld"
 GRAPH = "sparqld:context.jsonld"
 SUCCESS = "Success"
+YAML_COPY = ("!context.yamlld",)
 
 
 def read_context_capture(directory, identifier=None):
@@ -33,7 +34,7 @@ def read_context_capture(directory, identifier=None):
 
 def _row(directory):
     query = Template(load_query("context-capture.rq")).substitute(graph=GRAPH)
-    with CatalogService(directory) as service:
+    with CatalogService(directory, YAML_COPY) as service:
         rows = service.query(query)
     if not rows:
         location = (directory / DOCUMENT).as_posix()

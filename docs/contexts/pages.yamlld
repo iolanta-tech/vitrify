@@ -1,5 +1,11 @@
 "@context":
   - https://json-ld.org/contexts/dollar-convenience.jsonld
   - audience: urn:vitrify:vocabulary:audience
+    contentUrl:
+      "@id": http://schema.org/contentUrl
+      "@type": "@id"
 $id: urn:vitrify:pages
-context-file: pages.yamlld
+$type:
+  - http://schema.org/MediaObject
+  - http://www.w3.org/ns/json-ld#Context
+contentUrl: urn:vitrify:pages

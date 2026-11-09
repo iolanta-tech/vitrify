@@ -9,8 +9,11 @@
     context:
       "@id": urn:vitrify:vocabulary:context
       "@type": "@id"
-    context-file:
-      "@id": https://sparqld.iolanta.tech/context-file
+    contentUrl:
+      "@id": http://schema.org/contentUrl
       "@type": "@id"
 $id: urn:vitrify:examples
-context-file: examples.yamlld
+$type:
+  - http://schema.org/MediaObject
+  - http://www.w3.org/ns/json-ld#Context
+contentUrl: urn:vitrify:examples

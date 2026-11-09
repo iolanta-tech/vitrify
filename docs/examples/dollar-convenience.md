@@ -1,6 +1,7 @@
 ---
 "@context": urn:vitrify:examples
 context: https://json-ld.org/contexts/dollar-convenience.jsonld
+hide: [toc]
 ---
 
 # :material-code-braces: Dollar convenience

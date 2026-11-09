@@ -48,7 +48,7 @@ plugins:
   - search
   - macros:
       module_name: docs_macros
-      modules: [mkdocs_macros_sparqld]
+      modules: [docs_macros.sparqld_patterns, mkdocs_macros_sparqld]
       on_error_fail: true
 
 extra:

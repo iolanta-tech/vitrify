@@ -1,5 +1,6 @@
 ---
 icon: material/database-search
+hide: [toc]
 ---
 
 # :material-database-search: vitrify sparql

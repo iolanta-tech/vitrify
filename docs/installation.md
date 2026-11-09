@@ -1,5 +1,6 @@
 ---
 icon: material/download
+hide: [toc]
 ---
 
 # :material-download: Installation
