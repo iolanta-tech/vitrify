@@ -23,8 +23,9 @@ def _devnull():
 class CatalogService:
     """Load one docs directory with a process owned by this operation."""
 
-    def __init__(self, directory):
+    def __init__(self, directory, patterns=()):
         self.directory = directory
+        self._patterns = tuple(patterns)
 
     def __enter__(self):
         with socket.socket() as listener:
@@ -36,13 +37,12 @@ class CatalogService:
             tempfile.TemporaryFile(mode="w+", encoding="utf-8")
         )
         self.discarded = self.resources.enter_context(_devnull())
+        arguments = [str(self.directory), "--host", "127.0.0.1", "--port", str(port)]
+        for pattern in self._patterns:
+            arguments.extend(("--pattern", pattern))
+        arguments.append("--no-watch")
         self.process = sh.sparqld(
-            str(self.directory),
-            "--host",
-            "127.0.0.1",
-            "--port",
-            str(port),
-            "--no-watch",
+            *arguments,
             _bg=True,
             _bg_exc=False,
             _out=self.discarded,
