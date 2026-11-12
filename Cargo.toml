@@ -14,7 +14,7 @@ repository = "https://github.com/iolanta-tech/vitrify"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
 hex = "0.4"
-phf = { version = "0.11", features = ["macros"] }
+phf = { version = "0.14", features = ["macros"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 saphyr = "0.3"
 sha2 = "0.11"
