@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<sparql xmlns='http://www.w3.org/2005/sparql-results#'>
+	<head>
+		<variable name='person'/>
+		<variable name='personName'/>
+	</head>
+	<results>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q12953838</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>Eastern Apurímac Quechua</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q1753761</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>Enter the Ninja</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q16033930</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>Enter the Ninja</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q108884582</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>Enter the Ninja</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27139454</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>flavan-3,3',4',5,5',7-hexol</literal>
+			</binding>
+		</result>
+	</results>
+</sparql>

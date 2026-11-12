@@ -1,0 +1,87 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.2/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.2"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "author": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "datePublished": "2026-10-10T10:54:46.387312636+00:00",
+      "description": "SPARQL retrieval materialized by Vitrify.",
+      "hasPart": [
+        {
+          "@id": "results.csv"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "name": "results.csv",
+      "publisher": {
+        "@id": "https://qlever.dev/api/wikidata"
+      }
+    },
+    {
+      "@id": "results.csv",
+      "@type": "File",
+      "contentSize": "694",
+      "encodingFormat": "text/csv",
+      "sha256": "0b6f7c6aa1861209643fcfebc5c536be466c83b31acc3d394ff4b6746e1b418d"
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "contentSize": "769",
+      "encodingFormat": "application/sparql-query",
+      "sha256": "9b4c71804c7808c756426df34128eb32b4b7ea3ebaae78426c02680820280f23"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.0"
+    },
+    {
+      "@id": "https://qlever.dev/api/wikidata",
+      "@type": "Organization"
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "description": "HTTP 200; Accept: text/csv",
+      "endTime": "2026-10-10T10:54:46.387312636+00:00",
+      "identifier": "https://qlever.dev/api/wikidata",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://qlever.dev/api/wikidata"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "result": {
+        "@id": "results.csv"
+      },
+      "startTime": "2026-10-10T10:54:44.667867565+00:00"
+    }
+  ]
+}

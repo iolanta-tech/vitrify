@@ -1,0 +1,103 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.3/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.3"
+      },
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "results.csv",
+      "description": "SPARQL retrieval materialized by Vitrify.",
+      "datePublished": "2026-11-12T15:36:37.281970077+00:00",
+      "additionalProperty": [
+        {
+          "@id": "#retrieval-duration"
+        }
+      ],
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "hasPart": [
+        {
+          "@id": "results.csv"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "publisher": {
+        "@id": "https://qlever.dev/api/wikidata"
+      },
+      "author": {
+        "@id": "https://vitrify.iolanta.tech"
+      }
+    },
+    {
+      "@id": "results.csv",
+      "@type": "File",
+      "contentSize": "705",
+      "sha256": "6a7f8d90ca404d7c9a84866f8dea013b74bc40fd4fa8a5dbddc61c562ad10ade",
+      "encodingFormat": "text/csv"
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "contentSize": "440",
+      "encodingFormat": "application/sparql-query",
+      "sha256": "30904465b228f4ac14afd0b529b56de51976e7656d7c510c2fc9aba66180bab0"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.4"
+    },
+    {
+      "@id": "https://qlever.dev/api/wikidata",
+      "@type": "Organization"
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "actionStatus": {
+        "@id": "http://schema.org/CompletedActionStatus"
+      },
+      "startTime": "2026-11-12T15:36:36.286889844+00:00",
+      "endTime": "2026-11-12T15:36:37.281970077+00:00",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://qlever.dev/api/wikidata"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "result": {
+        "@id": "results.csv"
+      },
+      "identifier": "https://qlever.dev/api/wikidata",
+      "description": "HTTP 200; Accept: text/csv"
+    },
+    {
+      "@id": "#retrieval-duration",
+      "@type": "PropertyValue",
+      "propertyID": "retrieval-duration",
+      "name": "Retrieval duration",
+      "value": 0.991255724,
+      "unitCode": "SEC"
+    }
+  ]
+}
