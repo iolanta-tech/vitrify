@@ -1,0 +1,95 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.3/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.3"
+      },
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "encodingFormat": "application/sparql-query",
+      "contentSize": "956",
+      "sha256": "a6e850963ada0b9f0c8ce793c71525aec94fc29cce48dc656310dd4695900575"
+    },
+    {
+      "@id": "https://query.wikidata.org/sparql",
+      "@type": "Organization"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.4"
+    },
+    {
+      "@id": "#retrieval-duration",
+      "@type": "PropertyValue",
+      "propertyID": "retrieval-duration",
+      "name": "Retrieval duration",
+      "value": 65.17440695,
+      "unitCode": "SEC"
+    },
+    {
+      "@id": "#error",
+      "@type": "Thing",
+      "description": "endpoint returned HTTP 504 Gateway Timeout"
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "SPARQL retrieval",
+      "description": "SPARQL retrieval recorded by Vitrify.",
+      "datePublished": "2026-11-14T11:14:35.157889292+00:00",
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "publisher": {
+        "@id": "https://query.wikidata.org/sparql"
+      },
+      "hasPart": [
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "additionalProperty": [
+        {
+          "@id": "#retrieval-duration"
+        }
+      ]
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "actionStatus": {
+        "@id": "http://schema.org/FailedActionStatus"
+      },
+      "startTime": "2026-11-14T11:13:29.982062036+00:00",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://query.wikidata.org/sparql"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "identifier": "https://query.wikidata.org/sparql",
+      "description": "HTTP 504; Accept: application/sparql-results+json",
+      "endTime": "2026-11-14T11:14:35.157889292+00:00",
+      "error": {
+        "@id": "#error"
+      }
+    }
+  ]
+}
