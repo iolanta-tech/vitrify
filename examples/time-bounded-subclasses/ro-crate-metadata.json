@@ -1,0 +1,87 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.2/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.2"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "author": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "datePublished": "2026-10-04T18:49:07.100127491+00:00",
+      "description": "SPARQL retrieval materialized by Vitrify.",
+      "hasPart": [
+        {
+          "@id": "results.json"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "license": "No license asserted by Vitrify; consult the source endpoint's terms of use.",
+      "name": "results.json",
+      "publisher": {
+        "@id": "https://qlever.dev/api/wikidata"
+      }
+    },
+    {
+      "@id": "results.json",
+      "@type": "File",
+      "contentSize": "96502",
+      "encodingFormat": "application/sparql-results+json",
+      "sha256": "e17d8612c3bad3a1f4edc3a702433355e6a7c1419f2bd365b9af7bf1fdb9c647"
+    },
+    {
+      "@id": "query.rq",
+      "@type": "File",
+      "contentSize": "958",
+      "encodingFormat": "application/sparql-query",
+      "sha256": "8221f11f3945e9b67c1252f008651615d655b7fdb2ae8a844c65214c8bf22164"
+    },
+    {
+      "@id": "https://vitrify.iolanta.tech",
+      "@type": "SoftwareApplication",
+      "name": "Vitrify",
+      "url": "https://vitrify.iolanta.tech",
+      "version": "0.1.0"
+    },
+    {
+      "@id": "https://qlever.dev/api/wikidata",
+      "@type": "Organization"
+    },
+    {
+      "@id": "#retrieval",
+      "@type": "CreateAction",
+      "agent": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "description": "HTTP 200; Accept: application/sparql-results+json",
+      "endTime": "2026-10-04T18:49:07.100127491+00:00",
+      "identifier": "https://qlever.dev/api/wikidata",
+      "instrument": {
+        "@id": "https://vitrify.iolanta.tech"
+      },
+      "object": [
+        {
+          "@id": "https://qlever.dev/api/wikidata"
+        },
+        {
+          "@id": "query.rq"
+        }
+      ],
+      "result": {
+        "@id": "results.json"
+      },
+      "startTime": "2026-10-04T18:49:04.796810417+00:00"
+    }
+  ]
+}

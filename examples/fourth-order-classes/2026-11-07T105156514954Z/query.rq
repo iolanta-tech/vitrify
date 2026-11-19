@@ -1,0 +1,13 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?class ?classLabel WHERE {
+  ?class wdt:P31/wdt:P279* wd:Q24027474 .
+  OPTIONAL {
+    ?class rdfs:label ?englishLabel .
+    FILTER(LANG(?englishLabel) = "en")
+  }
+  BIND(COALESCE(?englishLabel, STRAFTER(STR(?class), "entity/")) AS ?classLabel)
+}
+ORDER BY ?classLabel ?class

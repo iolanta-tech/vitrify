@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<sparql xmlns='http://www.w3.org/2005/sparql-results#'>
+	<head>
+		<variable name='person'/>
+		<variable name='personName'/>
+	</head>
+	<results>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27255291</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>(11Z)-11-eicosenyl oleate</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27215373</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>(1S,5R)-3-methylsulfonyl-7-(4-phenylphenyl)-3,6-diazabicyclo[3.1.1]heptane</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27276974</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>(1S)-1-(3-methoxyphenyl)-N,N-dimethylethanamine</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27281030</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>(3R,4S)-3-(4-(4-fluorophenyl)-4-hydroxypiperidin-1-yl)-3,4-dihydro-2H-chromene-4,7-diol</literal>
+			</binding>
+		</result>
+		<result>
+			<binding name='person'>
+				<uri>http://www.wikidata.org/entity/Q27140302</uri>
+			</binding>
+			<binding name='personName'>
+				<literal xml:lang='en'>(R)-mallotophilippen E</literal>
+			</binding>
+		</result>
+	</results>
+</sparql>
